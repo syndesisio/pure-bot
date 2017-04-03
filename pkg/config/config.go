@@ -21,12 +21,14 @@ func NewWithDefaults() Config {
 			Port: 8080,
 		},
 		WebhookConfig{},
+		GitHubIntegrationConfig{},
 	}
 }
 
 type Config struct {
 	HTTP HTTPConfig `mapstructure:"http"`
 	Webhook WebhookConfig `mapstructure:"webhook"`
+	GitHubIntegration GitHubIntegrationConfig `mapstructure:"github"`
 }
 
 type HTTPConfig struct {
@@ -38,4 +40,9 @@ type HTTPConfig struct {
 
 type WebhookConfig struct {
 	Secret string `mapstructure:"secret"`
+}
+
+type GitHubIntegrationConfig struct {
+	IntegrationID int `mapstructure:"integrationId"`
+	PrivateKeyFile string `mapstructure:"privateKey"`
 }

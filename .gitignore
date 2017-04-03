@@ -1,5 +1,8 @@
-/.idea/
+/bin
+/.go
+/.push-*
+/.image-*
+/.dockerfile-*
+/vendor
+/.idea
 *.iml
-/bin/
-/.go/
-/vendor/

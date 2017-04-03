@@ -22,9 +22,11 @@ import (
 	"syscall"
 
 	"github.com/pkg/errors"
-	"github.com/redhat-ipaas/pure-bot/pkg/http"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+
+	"github.com/redhat-ipaas/pure-bot/pkg/http"
+	"github.com/redhat-ipaas/pure-bot/pkg/webhook"
 )
 
 // runCmd represents the run command
@@ -33,7 +35,12 @@ var runCmd = &cobra.Command{
 	Short: "Runs pure-bot",
 	Long:  `Runs pure-bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv := http.New(botConfig.HTTP)
+		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig.GitHubIntegration, logger.Named("webhook"))
+		if err != nil {
+			logger.Fatal("failed to create webhook handler", zap.Error(err))
+		}
+
+		srv := http.New(botConfig.HTTP, webhookHandler)
 		c := make(chan os.Signal, 2)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		var wg sync.WaitGroup
@@ -69,4 +76,8 @@ func init() {
 	v.BindPFlag("http.tlsCert", runCmd.Flags().Lookup("tls-cert"))
 	runCmd.Flags().String("tls-key", "", "TLS key file")
 	v.BindPFlag("http.tlsKey", runCmd.Flags().Lookup("tls-key"))
+	runCmd.Flags().Int("github-integration-id", 0, "GitHub integration ID")
+	v.BindPFlag("github.integrationId", runCmd.Flags().Lookup("github-integration-id"))
+	runCmd.Flags().String("github-integration-private-key", "", "GitHub integration private key file")
+	v.BindPFlag("github.privateKey", runCmd.Flags().Lookup("github-integration-private-key"))
 }

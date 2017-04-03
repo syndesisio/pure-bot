@@ -26,11 +26,12 @@ import (
 	"time"
 )
 
-func New(cfg config.HTTPConfig) *Server {
+func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {
 	srv := &Server{
 		cfg: cfg,
 		http: &http.Server{
 			Addr: net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port)),
+			Handler: h,
 		},
 	}
 	return srv
