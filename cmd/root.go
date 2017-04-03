@@ -15,64 +15,82 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"flag"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
+	"github.com/redhat-ipaas/pure-bot/pkg/version"
+	"github.com/redhat-ipaas/pure-bot/pkg/config"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	logLevel = zapcore.InfoLevel
+	logger *zap.Logger
+	botConfig = config.NewWithDefaults()
+	v = viper.New()
+)
 
-// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "pure-bot",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-// Uncomment the following line if your bare application
-// has an action associated with it:
-//	Run: func(cmd *cobra.Command, args []string) { },
+	Short: "PuRe Bot - pull request bot",
+	Long: `PuRe Bot - pull request bot.`,
 }
 
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		logger.Fatal("Command failed", zap.Error(err))
 	}
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
+	cobra.OnInitialize(initLogging, printVersion, initConfig)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pure-bot.yaml)")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().AddGoFlag(&flag.Flag{
+		Name: "log-level",
+		Value: &logLevel,
+		DefValue: "info",
+		Usage: "log level",
+	})
+}
+
+func initLogging() {
+	logConfig := zap.NewProductionConfig()
+	logConfig.Level.SetLevel(logLevel)
+	logger, _ = logConfig.Build()
+}
+
+func printVersion() {
+	logger.Info("Build info", zap.String("version", version.AppVersion))
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
+		v.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigName(".pure-bot") // name of config file (without extension)
-	viper.AddConfigPath("$HOME")  // adding home directory as first search path
-	viper.AutomaticEnv()          // read in environment variables that match
+	v.SetConfigName(".pure-bot") // name of config file (without extension)
+	v.AddConfigPath("$HOME")  // adding home directory as first search path
+	v.AutomaticEnv()          // read in environment variables that match
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	err := v.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigParseError); ok {
+			logger.Fatal("Failed to parse config file", zap.Error(err))
+		}
+		logger.Debug("No config file found")
+	} else {
+		logger.Info("Using config file", zap.String("file", v.ConfigFileUsed()))
 	}
+
+	if err := v.UnmarshalExact(&botConfig); err != nil {
+		logger.Fatal("Failed to unmarshal config file", zap.Error(err))
+	}
+
+	logger.Debug("Using config", zap.Reflect("config", botConfig))
 }
