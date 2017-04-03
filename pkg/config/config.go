@@ -25,8 +25,8 @@ func NewWithDefaults() Config {
 }
 
 type Config struct {
-	HTTPConfig `mapstructure:"http"`
-	WebhookConfig `mapstructure:"webhook"`
+	HTTP HTTPConfig `mapstructure:"http"`
+	Webhook WebhookConfig `mapstructure:"webhook"`
 }
 
 type HTTPConfig struct {

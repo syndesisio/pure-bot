@@ -33,7 +33,7 @@ var runCmd = &cobra.Command{
 	Short: "Runs pure-bot",
 	Long:  `Runs pure-bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv := http.New(botConfig)
+		srv := http.New(botConfig.HTTP)
 		c := make(chan os.Signal, 2)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		var wg sync.WaitGroup

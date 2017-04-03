@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-func New(cfg config.Config) *Server {
+func New(cfg config.HTTPConfig) *Server {
 	srv := &Server{
 		cfg: cfg,
 		http: &http.Server{
@@ -37,7 +37,7 @@ func New(cfg config.Config) *Server {
 }
 
 type Server struct {
-	cfg config.Config
+	cfg config.HTTPConfig
 	http *http.Server
 }
 
