@@ -76,6 +76,7 @@ func initConfig() {
 
 	v.SetConfigName(".pure-bot") // name of config file (without extension)
 	v.AddConfigPath("$HOME")  // adding home directory as first search path
+	v.SetEnvPrefix("PUREBOT") // Set env prefix
 	v.AutomaticEnv()          // read in environment variables that match
 
 	err := v.ReadInConfig()
