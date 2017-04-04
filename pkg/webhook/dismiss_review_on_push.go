@@ -37,15 +37,15 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, payload interface{}, 
 		return errors.New("wrong event payload type")
 	}
 
-	if event.Installation == nil {
-		return nil
-	}
-
 	if event.Action == nil {
 		return nil
 	}
 	action := *event.Action
 	if action != "synchronize" {
+		return nil
+	}
+
+	if event.Installation == nil {
 		return nil
 	}
 

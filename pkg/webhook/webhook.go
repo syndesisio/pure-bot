@@ -36,7 +36,8 @@ type Handler interface {
 
 var (
 	handlers = map[string][]Handler{
-		"pull_request": {dismissReviewHandler},
+		//"pull_request": {dismissReviewHandler},
+		"pull_request_review": {addLabelOnReviewApprovalHandler},
 	}
 )
 
