@@ -52,7 +52,7 @@ IMAGE := $(REGISTRY)/$(BIN)
 
 GOVERSION ?= 1.8.0
 BUILD_IMAGE ?= golang:$(GOVERSION)-alpine
-ONBUILD_IMAGE ?= golang:$(GOVERSION)-onbuild
+GOLANG_IMAGE ?= golang:$(GOVERSION)
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all images, see the 'all-image' rule.
@@ -96,18 +96,15 @@ bin/$(ARCH)/$(BIN): vendor build-dirs
 	        ./build/build.sh                                                 \
 	    "
 
-vendor: .vendor glide.lock glide.yaml
+vendor: build-dirs .vendor glide.lock glide.yaml
 .vendor:
 	@echo "updating vendored deps"
 	@docker run                                                              \
 	    -ti                                                                  \
-	    -v $$(pwd)/.go:/go:Z                                                 \
-	    -v $$(pwd):/go/src/$(PKG):Z                                          \
+	    -v $$(pwd):/go/src/$(PKG):Z                                         \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin:Z                                     \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH):Z                       \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z  \
 	    -w /go/src/$(PKG)                                                    \
-	    $(ONBUILD_IMAGE)                                                     \
+	    $(GOLANG_IMAGE)                                                     \
 	    /bin/sh -c "                                                         \
 	        ./build/update_vendor.sh                                         \
 	    "
@@ -161,10 +158,13 @@ build-dirs:
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
 
-clean: image-clean bin-clean
+clean: image-clean bin-clean vendor-clean
 
 image-clean:
 	rm -rf .image-* .dockerfile-* .push-*
 
 bin-clean:
 	rm -rf .go bin
+
+vendor-clean:
+	rm -f .vendor
