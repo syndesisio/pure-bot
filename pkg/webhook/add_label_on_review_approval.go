@@ -43,18 +43,18 @@ func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, payload in
 		return nil
 	}
 
-	if strings.ToLower(*event.Review.State) != approvedReviewState {
+	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
 		return nil
 	}
 
-	gh, err := ghClientFunc(*event.Installation.ID)
+	gh, err := ghClientFunc(event.Installation.GetID())
 	if err != nil {
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	pr, _, err := gh.Issues.Get(context.Background(), *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number)
+	pr, _, err := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber())
 	if err != nil {
-		return errors.Wrapf(err, "failed to get PR %s", *event.PullRequest.HTMLURL)
+		return errors.Wrapf(err, "failed to get PR %s", event.PullRequest.GetHTMLURL())
 	}
 	for _, label := range pr.Labels {
 		if *label.Name == approvedLabel {
@@ -62,17 +62,17 @@ func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, payload in
 		}
 	}
 
-	message := fmt.Sprintf("Pull request [approved](%s) by @%s - applying _%s_ label", *event.Review.HTMLURL, *event.Review.User.Login, approvedLabel)
-	_, _, err = gh.Issues.CreateComment(context.Background(), *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number, &github.IssueComment{
+	message := fmt.Sprintf("Pull request [approved](%s) by @%s - applying _%s_ label", event.Review.GetHTMLURL(), event.Review.User.GetLogin(), approvedLabel)
+	_, _, err = gh.Issues.CreateComment(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), &github.IssueComment{
 		Body: &message,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to add comment '%s' to PR %s", message, *event.PullRequest.HTMLURL)
+		return errors.Wrapf(err, "failed to add comment '%s' to PR %s", message, event.PullRequest.GetHTMLURL())
 	}
 
-	_, _, err = gh.Issues.AddLabelsToIssue(context.Background(), *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number, []string{approvedLabel})
+	_, _, err = gh.Issues.AddLabelsToIssue(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), []string{approvedLabel})
 	if err != nil {
-		return errors.Wrapf(err, "failed to add label '%s' to PR %s", approvedLabel, *event.PullRequest.HTMLURL)
+		return errors.Wrapf(err, "failed to add label '%s' to PR %s", approvedLabel, event.PullRequest.GetHTMLURL())
 	}
 
 	return nil

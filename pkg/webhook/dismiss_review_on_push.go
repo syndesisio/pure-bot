@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
+	"strings"
 )
 
 var (
@@ -40,7 +41,7 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, payload interface{}, 
 	if event.Action == nil {
 		return nil
 	}
-	action := *event.Action
+	action := strings.ToLower(event.GetAction())
 	if action != "synchronize" {
 		return nil
 	}
@@ -49,19 +50,19 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, payload interface{}, 
 		return nil
 	}
 
-	gh, err := ghClientFunc(*event.Installation.ID)
+	gh, err := ghClientFunc(event.Installation.GetID())
 	if err != nil {
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	reviews, _, err := gh.PullRequests.ListReviews(context.Background(), *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number)
+	reviews, _, err := gh.PullRequests.ListReviews(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber())
 	if err != nil {
 		return errors.Wrap(err, "failed to get pull request")
 	}
 
 	var multiErr error
 	for _, review := range reviews {
-		_, _, err = gh.PullRequests.DismissReview(context.Background(), *event.Repo.Owner.Login, *event.Repo.Name, *event.PullRequest.Number, *review.ID, &github.PullRequestReviewDismissalRequest{
+		_, _, err = gh.PullRequests.DismissReview(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), review.GetID(), &github.PullRequestReviewDismissalRequest{
 			Message: &dismissMessage,
 		})
 		multiErr = multierr.Combine(multiErr, err)

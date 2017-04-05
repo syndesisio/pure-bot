@@ -21,11 +21,10 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
-	"go.uber.org/zap"
-
 	"github.com/redhat-ipaas/pure-bot/pkg/config"
 	"github.com/redhat-ipaas/pure-bot/pkg/github/integrations"
+	"go.uber.org/multierr"
+	"go.uber.org/zap"
 )
 
 type GitHubIntegrationsClientFunc func(installationID int) (*github.Client, error)
@@ -38,6 +37,8 @@ var (
 	handlers = map[string][]Handler{
 		//"pull_request": {dismissReviewHandler},
 		"pull_request_review": {addLabelOnReviewApprovalHandler},
+		"pull_request":        {autoMergeHandler},
+		"status":              {autoMergeHandler},
 	}
 )
 
