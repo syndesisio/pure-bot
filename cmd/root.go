@@ -70,19 +70,22 @@ func printVersion() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" { // enable ability to specify config file via flag
+	v.SetConfigName(".pure-bot") // name of config file (without extension)
+	v.AddConfigPath("$HOME")     // adding home directory as first search path
+	if cfgFile != "" {           // enable ability to specify config file via flag
 		v.SetConfigFile(cfgFile)
 	}
 
-	v.SetConfigName(".pure-bot") // name of config file (without extension)
-	v.AddConfigPath("$HOME")     // adding home directory as first search path
-	v.SetEnvPrefix("PUREBOT")    // Set env prefix
-	v.AutomaticEnv()             // read in environment variables that match
+	v.SetEnvPrefix("PUREBOT") // Set env prefix
+	v.AutomaticEnv()          // read in environment variables that match
 
 	err := v.ReadInConfig()
 	if err != nil {
 		if _, ok := err.(viper.ConfigParseError); ok {
 			logger.Fatal("Failed to parse config file", zap.Error(err))
+		}
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			logger.Fatal("Failed to read config file", zap.Error(err))
 		}
 		logger.Debug("No config file found")
 	} else {
