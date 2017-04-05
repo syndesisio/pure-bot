@@ -50,7 +50,9 @@ endif
 
 IMAGE := $(REGISTRY)/$(BIN)
 
-BUILD_IMAGE ?= golang:1.8-alpine
+GOVERSION ?= 1.8.0
+BUILD_IMAGE ?= golang:$(GOVERSION)-alpine
+ONBUILD_IMAGE ?= golang:$(GOVERSION)-onbuild
 
 # If you want to build all binaries, see the 'all-build' rule.
 # If you want to build all images, see the 'all-image' rule.
@@ -74,7 +76,7 @@ all-push: $(addprefix push-, $(ALL_ARCH))
 
 build: bin/$(ARCH)/$(BIN)
 
-bin/$(ARCH)/$(BIN): build-dirs
+bin/$(ARCH)/$(BIN): vendor build-dirs
 	@echo "building: $@"
 	@docker run                                                              \
 	    -ti                                                                  \
@@ -93,6 +95,23 @@ bin/$(ARCH)/$(BIN): build-dirs
 	        PKG=$(PKG)                                                       \
 	        ./build/build.sh                                                 \
 	    "
+
+vendor: .vendor glide.lock glide.yaml
+.vendor:
+	@echo "updating vendored deps"
+	@docker run                                                              \
+	    -ti                                                                  \
+	    -v $$(pwd)/.go:/go:Z                                                 \
+	    -v $$(pwd):/go/src/$(PKG):Z                                          \
+	    -v $$(pwd)/bin/$(ARCH):/go/bin:Z                                     \
+	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH):Z                       \
+	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z  \
+	    -w /go/src/$(PKG)                                                    \
+	    $(ONBUILD_IMAGE)                                                     \
+	    /bin/sh -c "                                                         \
+	        ./build/update_vendor.sh                                         \
+	    "
+	@touch .vendor
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
