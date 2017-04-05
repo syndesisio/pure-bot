@@ -1,5 +1,5 @@
-hash: 0fbd7d0b251af84747f4b89d8c29451e4ad8de3643c16e44932ad87459279fc3
-updated: 2017-04-03T22:34:11.299177339+01:00
+hash: caf109f344668fa486b7592f8a8c2475b0c098cdbf283b79edbee1dd34f0ea44
+updated: 2017-04-05T10:11:23.072498461+01:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
@@ -10,7 +10,9 @@ imports:
   subpackages:
   - proto
 - name: github.com/google/go-github
-  version: 12363ffc10018c93407ebf303040586d55957271
+  version: 60e1678f661a499de018927ec9f359e4e6d16baa
+  repo: https://github.com/jimmidyson/go-github
+  vcs: git
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -37,7 +39,7 @@ imports:
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
-  version: e32a2e04744250647a72bf17da1b09befc03b6b1
+  version: fe206efb84b2bc8e8cfafe6b4c1826622be969e3
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/spf13/afero
