@@ -28,7 +28,7 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Display bot version",
-	Long: `Display bot version.`,
+	Long:  `Display bot version.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(filepath.Base(os.Args[0]), version.AppVersion)
 	},

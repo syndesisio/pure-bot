@@ -22,22 +22,22 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/redhat-ipaas/pure-bot/pkg/version"
 	"github.com/redhat-ipaas/pure-bot/pkg/config"
+	"github.com/redhat-ipaas/pure-bot/pkg/version"
 )
 
 var (
-	cfgFile string
-	logLevel = zapcore.InfoLevel
-	logger *zap.Logger
+	cfgFile   string
+	logLevel  = zapcore.InfoLevel
+	logger    *zap.Logger
 	botConfig = config.NewWithDefaults()
-	v = viper.New()
+	v         = viper.New()
 )
 
 var RootCmd = &cobra.Command{
 	Use:   "pure-bot",
 	Short: "PuRe Bot - pull request bot",
-	Long: `PuRe Bot - pull request bot.`,
+	Long:  `PuRe Bot - pull request bot.`,
 }
 
 func Execute() {
@@ -51,10 +51,10 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pure-bot.yaml)")
 	RootCmd.PersistentFlags().AddGoFlag(&flag.Flag{
-		Name: "log-level",
-		Value: &logLevel,
+		Name:     "log-level",
+		Value:    &logLevel,
 		DefValue: "info",
-		Usage: "log level",
+		Usage:    "log level",
 	})
 }
 
@@ -75,9 +75,9 @@ func initConfig() {
 	}
 
 	v.SetConfigName(".pure-bot") // name of config file (without extension)
-	v.AddConfigPath("$HOME")  // adding home directory as first search path
-	v.SetEnvPrefix("PUREBOT") // Set env prefix
-	v.AutomaticEnv()          // read in environment variables that match
+	v.AddConfigPath("$HOME")     // adding home directory as first search path
+	v.SetEnvPrefix("PUREBOT")    // Set env prefix
+	v.AutomaticEnv()             // read in environment variables that match
 
 	err := v.ReadInConfig()
 	if err != nil {

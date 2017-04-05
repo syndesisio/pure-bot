@@ -30,7 +30,7 @@ func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {
 	srv := &Server{
 		cfg: cfg,
 		http: &http.Server{
-			Addr: net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port)),
+			Addr:    net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port)),
 			Handler: h,
 		},
 	}
@@ -38,7 +38,7 @@ func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {
 }
 
 type Server struct {
-	cfg config.HTTPConfig
+	cfg  config.HTTPConfig
 	http *http.Server
 }
 
@@ -56,7 +56,8 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
-	ctx, _ := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if err := s.http.Shutdown(ctx); err != nil {
 		return errors.Wrap(err, "failed to cleanly shutdown web server")
 	}

@@ -18,7 +18,7 @@ func NewWithDefaults() Config {
 	return Config{
 		HTTPConfig{
 			Address: "",
-			Port: 8080,
+			Port:    8080,
 		},
 		WebhookConfig{},
 		GitHubIntegrationConfig{},
@@ -26,16 +26,16 @@ func NewWithDefaults() Config {
 }
 
 type Config struct {
-	HTTP HTTPConfig `mapstructure:"http"`
-	Webhook WebhookConfig `mapstructure:"webhook"`
+	HTTP              HTTPConfig              `mapstructure:"http"`
+	Webhook           WebhookConfig           `mapstructure:"webhook"`
 	GitHubIntegration GitHubIntegrationConfig `mapstructure:"github"`
 }
 
 type HTTPConfig struct {
 	Address string `mapstructure:"address"`
-	Port int `mapstructure:"port"`
+	Port    int    `mapstructure:"port"`
 	TLSCert string `mapstructure:"tlsCert"`
-	TLSKey string `mapstructure:"tlsKey"`
+	TLSKey  string `mapstructure:"tlsKey"`
 }
 
 type WebhookConfig struct {
@@ -43,6 +43,6 @@ type WebhookConfig struct {
 }
 
 type GitHubIntegrationConfig struct {
-	IntegrationID int `mapstructure:"integrationId"`
+	IntegrationID  int    `mapstructure:"integrationId"`
 	PrivateKeyFile string `mapstructure:"privateKey"`
 }
