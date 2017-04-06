@@ -77,8 +77,8 @@ func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.Stat
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	commitSHA := event.Commit.GetSHA()
-	query := fmt.Sprintf("type:issue state:open repo:%s %s", event.Repo.GetFullName(), commitSHA)
+	commitSHA := event.GetSHA()
+	query := fmt.Sprintf("type:pr state:open repo:%s %s", event.Repo.GetFullName(), commitSHA)
 	searchResult, _, err := gh.Search.Issues(context.Background(), query, nil)
 	var multiErr error
 	for _, issue := range searchResult.Issues {
