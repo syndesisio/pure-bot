@@ -40,9 +40,19 @@ func (h *autoMerger) HandleEvent(w http.ResponseWriter, payload interface{}, ghC
 		return h.handlePullRequestEvent(w, event, ghClientFunc)
 	case *github.StatusEvent:
 		return h.handleStatusEvent(w, event, ghClientFunc)
+	case *github.PullRequestReviewEvent:
+		return h.handlePullRequestReviewEvent(w, event, ghClientFunc)
 	default:
 		return nil
 	}
+}
+
+func (h *autoMerger) handlePullRequestReviewEvent(w http.ResponseWriter, event *github.PullRequestReviewEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
+	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
+		return nil
+	}
+
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
 }
 
 func (h *autoMerger) handlePullRequestEvent(w http.ResponseWriter, event *github.PullRequestEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
@@ -50,17 +60,21 @@ func (h *autoMerger) handlePullRequestEvent(w http.ResponseWriter, event *github
 		return nil
 	}
 
-	gh, err := ghClientFunc(event.Installation.GetID())
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
+}
+
+func (h *autoMerger) mergePRFromPullRequestEvent(installationID int, repo *github.Repository, pullRequest *github.PullRequest, ghClientFunc GitHubIntegrationsClientFunc) error {
+	gh, err := ghClientFunc(installationID)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	issue, _, err := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.GetNumber())
+	issue, _, err := gh.Issues.Get(context.Background(), repo.Owner.GetLogin(), repo.GetName(), pullRequest.GetNumber())
 	if err != nil {
-		return errors.Wrapf(err, "failed to get pull request %s", event.PullRequest.GetHTMLURL())
+		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
 	}
 
-	return mergePR(issue, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, "")
+	return mergePR(issue, repo.Owner.GetLogin(), repo.GetName(), gh, "")
 }
 
 func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.StatusEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
