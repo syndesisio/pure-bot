@@ -34,8 +34,8 @@ const (
 
 type autoMerger struct{}
 
-func (h *autoMerger) HandleEvent(w http.ResponseWriter, payload interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
-	switch event := payload.(type) {
+func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
+	switch event := eventObject.(type) {
 	case *github.PullRequestEvent:
 		return h.handlePullRequestEvent(w, event, ghClientFunc)
 	case *github.StatusEvent:

@@ -30,7 +30,7 @@ import (
 type GitHubIntegrationsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(w http.ResponseWriter, payload interface{}, f GitHubIntegrationsClientFunc) error
+	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubIntegrationsClientFunc) error
 }
 
 var (

@@ -33,10 +33,10 @@ const (
 
 type addLabelOnReviewApproval struct{}
 
-func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, payload interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
-	event, ok := payload.(*github.PullRequestReviewEvent)
+func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
+	event, ok := eventObject.(*github.PullRequestReviewEvent)
 	if !ok {
-		return errors.New("wrong event payload type")
+		return errors.New("wrong event eventObject type")
 	}
 
 	if event.Installation == nil {
