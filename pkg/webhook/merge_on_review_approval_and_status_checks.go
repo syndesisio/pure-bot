@@ -100,10 +100,6 @@ func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.Stat
 			continue
 		}
 
-		if !containsLabel(issue.Labels, approvedLabel) {
-			continue
-		}
-
 		err := mergePR(&issue, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA)
 		if err != nil {
 			multiErr = multierr.Combine(multiErr, err)
@@ -123,6 +119,10 @@ func containsLabel(labels []github.Label, label string) bool {
 }
 
 func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, commitSHA string) error {
+	if !containsLabel(issue.Labels, approvedLabel) {
+		return nil
+	}
+
 	pr, _, err := gh.PullRequests.Get(context.Background(), owner, repository, issue.GetNumber())
 	if err != nil {
 		return errors.Wrapf(err, "failed to get pull request %s", issue.GetHTMLURL())
