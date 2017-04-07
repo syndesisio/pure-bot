@@ -34,15 +34,25 @@ const (
 
 type autoMerger struct{}
 
-func (h *autoMerger) HandleEvent(w http.ResponseWriter, payload interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
-	switch event := payload.(type) {
+func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
+	switch event := eventObject.(type) {
 	case *github.PullRequestEvent:
 		return h.handlePullRequestEvent(w, event, ghClientFunc)
 	case *github.StatusEvent:
 		return h.handleStatusEvent(w, event, ghClientFunc)
+	case *github.PullRequestReviewEvent:
+		return h.handlePullRequestReviewEvent(w, event, ghClientFunc)
 	default:
 		return nil
 	}
+}
+
+func (h *autoMerger) handlePullRequestReviewEvent(w http.ResponseWriter, event *github.PullRequestReviewEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
+	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
+		return nil
+	}
+
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
 }
 
 func (h *autoMerger) handlePullRequestEvent(w http.ResponseWriter, event *github.PullRequestEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
@@ -50,17 +60,21 @@ func (h *autoMerger) handlePullRequestEvent(w http.ResponseWriter, event *github
 		return nil
 	}
 
-	gh, err := ghClientFunc(event.Installation.GetID())
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
+}
+
+func (h *autoMerger) mergePRFromPullRequestEvent(installationID int, repo *github.Repository, pullRequest *github.PullRequest, ghClientFunc GitHubIntegrationsClientFunc) error {
+	gh, err := ghClientFunc(installationID)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	issue, _, err := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.GetNumber())
+	issue, _, err := gh.Issues.Get(context.Background(), repo.Owner.GetLogin(), repo.GetName(), pullRequest.GetNumber())
 	if err != nil {
-		return errors.Wrapf(err, "failed to get pull request %s", event.PullRequest.GetHTMLURL())
+		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
 	}
 
-	return mergePR(issue, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, "")
+	return mergePR(issue, repo.Owner.GetLogin(), repo.GetName(), gh, "")
 }
 
 func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.StatusEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
@@ -86,10 +100,6 @@ func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.Stat
 			continue
 		}
 
-		if !containsLabel(issue.Labels, approvedLabel) {
-			continue
-		}
-
 		err := mergePR(&issue, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA)
 		if err != nil {
 			multiErr = multierr.Combine(multiErr, err)
@@ -109,6 +119,10 @@ func containsLabel(labels []github.Label, label string) bool {
 }
 
 func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, commitSHA string) error {
+	if !containsLabel(issue.Labels, approvedLabel) {
+		return nil
+	}
+
 	pr, _, err := gh.PullRequests.Get(context.Background(), owner, repository, issue.GetNumber())
 	if err != nil {
 		return errors.Wrapf(err, "failed to get pull request %s", issue.GetHTMLURL())

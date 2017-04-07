@@ -30,13 +30,13 @@ import (
 type GitHubIntegrationsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(w http.ResponseWriter, payload interface{}, f GitHubIntegrationsClientFunc) error
+	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubIntegrationsClientFunc) error
 }
 
 var (
 	handlers = map[string][]Handler{
 		//"pull_request": {dismissReviewHandler},
-		"pull_request_review": {addLabelOnReviewApprovalHandler},
+		"pull_request_review": {addLabelOnReviewApprovalHandler, autoMergeHandler},
 		"pull_request":        {autoMergeHandler},
 		"status":              {autoMergeHandler},
 	}
