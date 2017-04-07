@@ -27,6 +27,9 @@ ARCH ?= amd64
 BUILD_DATE := $(shell date -u)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --dirty --always)
 
+OPENSHIFT_IMAGE_STREAM ?= pure-bot:deploy
+OPENSHIFT_CLIENT_IMAGE ?= openshift/origin:v1.5.0-rc.0
+
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -136,6 +139,14 @@ endif
 
 push-name:
 	@echo "pushed: $(IMAGE):$(VERSION)"
+
+circleci-deploy: push
+	@docker run --entrypoint=/bin/sh $(OPENSHIFT_CLIENT_IMAGE) -c "                      \
+	  openshift cli login $$OPENSHIFT_SERVER --token=$$OPENSHIFT_TOKEN &&                \
+	  openshift cli project $$OPENSHIFT_PROJECT &&                                       \
+	  openshift cli tag --source=docker $(IMAGE):$(VERSION) $(OPENSHIFT_IMAGE_STREAM) && \
+	  openshift cli import-image $(OPENSHIFT_IMAGE_STREAM)
+	"
 
 version:
 	@echo $(VERSION)
