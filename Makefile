@@ -145,7 +145,7 @@ circleci-deploy: push
 	  openshift cli login $$OPENSHIFT_SERVER --token=$$OPENSHIFT_TOKEN &&                \
 	  openshift cli project $$OPENSHIFT_PROJECT &&                                       \
 	  openshift cli tag --source=docker $(IMAGE):$(VERSION) $(OPENSHIFT_IMAGE_STREAM) && \
-	  openshift cli import-image $(OPENSHIFT_IMAGE_STREAM)
+	  openshift cli import-image $(OPENSHIFT_IMAGE_STREAM)                               \
 	"
 
 version:
