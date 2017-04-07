@@ -61,6 +61,7 @@ func init() {
 func initLogging() {
 	logConfig := zap.NewProductionConfig()
 	logConfig.Level.SetLevel(logLevel)
+	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, _ = logConfig.Build()
 }
 
