@@ -7,9 +7,6 @@ import:
 - package: github.com/pkg/errors
   version: ^0.8.0
 - package: github.com/google/go-github
-  repo: https://github.com/jimmidyson/go-github
-  version: required-status-checks
-  vcs: git
 - package: go.uber.org/multierr
   version: ^0.1.0
 - package: github.com/dgrijalva/jwt-go
