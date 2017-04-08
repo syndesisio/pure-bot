@@ -53,7 +53,7 @@ endif
 
 IMAGE := $(REGISTRY)/$(BIN)
 
-GOVERSION ?= 1.8.0
+GOVERSION ?= 1.8.1
 BUILD_IMAGE ?= golang:$(GOVERSION)-alpine
 GOLANG_IMAGE ?= golang:$(GOVERSION)
 
