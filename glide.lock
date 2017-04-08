@@ -1,5 +1,5 @@
-hash: caf109f344668fa486b7592f8a8c2475b0c098cdbf283b79edbee1dd34f0ea44
-updated: 2017-04-05T10:11:23.072498461+01:00
+hash: 0fbd7d0b251af84747f4b89d8c29451e4ad8de3643c16e44932ad87459279fc3
+updated: 2017-04-08T21:24:15.722343692+01:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
@@ -10,9 +10,7 @@ imports:
   subpackages:
   - proto
 - name: github.com/google/go-github
-  version: 60e1678f661a499de018927ec9f359e4e6d16baa
-  repo: https://github.com/jimmidyson/go-github
-  vcs: git
+  version: d23570d44313ca73dbcaadec71fc43eca4d29f8b
   subpackages:
   - github
 - name: github.com/google/go-querystring
