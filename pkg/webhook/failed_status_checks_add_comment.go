@@ -16,13 +16,13 @@ package webhook
 
 import (
 	"context"
-	"net/http"
-
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
-	"strings"
 )
 
 var (
@@ -54,18 +54,41 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 	commitSHA := event.GetSHA()
 	query := fmt.Sprintf("type:pr state:open repo:%s %s", event.Repo.GetFullName(), commitSHA)
 	searchResult, _, err := gh.Search.Issues(context.Background(), query, nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to find PR using query %s", query)
+	}
+
+	owner, repo := event.Repo.Owner.GetLogin(), event.Repo.GetName()
+
 	var multiErr error
 	for _, issue := range searchResult.Issues {
 		if issue.PullRequestLinks == nil {
 			continue
 		}
 
-		msg := fmt.Sprintf("Status check _%s_ returned **%s**.", event.GetContext(), state)
+		prNumber, prURL := issue.GetNumber(), issue.GetHTMLURL()
+
+		message := fmt.Sprintf("Status check _%s_ returned **%s**.", event.GetContext(), state)
 		if event.GetTargetURL() != "" {
-			msg += fmt.Sprintf(" See %s for more details.", event.GetTargetURL())
+			message += fmt.Sprintf(" See %s for more details.", event.GetTargetURL())
 		}
-		_, _, err := gh.Issues.CreateComment(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), issue.GetNumber(), &github.IssueComment{
-			Body: &msg,
+
+		existingComments, _, err := gh.Issues.ListComments(context.Background(), owner, repo, prNumber, &github.IssueListCommentsOptions{
+			Sort:      "updated",
+			Direction: "desc",
+		})
+		if err != nil {
+			return errors.Wrapf(err, "failed to retrieve existing comments on PR %s", prURL)
+		}
+
+		for _, existingComment := range existingComments {
+			if message == existingComment.GetBody() {
+				continue
+			}
+		}
+
+		_, _, err = gh.Issues.CreateComment(context.Background(), owner, repo, prNumber, &github.IssueComment{
+			Body: &message,
 		})
 		if err != nil {
 			multiErr = multierr.Combine(multiErr, err)
