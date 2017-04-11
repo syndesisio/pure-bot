@@ -52,9 +52,11 @@ func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObjec
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	pr, _, err := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber())
+	owner, repo, prNumber, prURL := event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), event.PullRequest.GetHTMLURL()
+
+	pr, _, err := gh.Issues.Get(context.Background(), owner, repo, prNumber)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get PR %s", event.PullRequest.GetHTMLURL())
+		return errors.Wrapf(err, "failed to get PR %s", prURL)
 	}
 	for _, label := range pr.Labels {
 		if *label.Name == approvedLabel {
@@ -63,16 +65,16 @@ func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObjec
 	}
 
 	message := fmt.Sprintf("Pull request [approved](%s) by @%s - applying _%s_ label", event.Review.GetHTMLURL(), event.Review.User.GetLogin(), approvedLabel)
-	_, _, err = gh.Issues.CreateComment(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), &github.IssueComment{
+	_, _, err = gh.Issues.CreateComment(context.Background(), owner, repo, prNumber, &github.IssueComment{
 		Body: &message,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "failed to add comment '%s' to PR %s", message, event.PullRequest.GetHTMLURL())
+		return errors.Wrapf(err, "failed to add comment '%s' to PR %s", message, prURL)
 	}
 
-	_, _, err = gh.Issues.AddLabelsToIssue(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), []string{approvedLabel})
+	_, _, err = gh.Issues.AddLabelsToIssue(context.Background(), owner, repo, prNumber, []string{approvedLabel})
 	if err != nil {
-		return errors.Wrapf(err, "failed to add label '%s' to PR %s", approvedLabel, event.PullRequest.GetHTMLURL())
+		return errors.Wrapf(err, "failed to add label '%s' to PR %s", approvedLabel, prURL)
 	}
 
 	return nil
