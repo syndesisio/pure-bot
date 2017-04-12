@@ -19,11 +19,11 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/redhat-ipaas/pure-bot/pkg/config"
-	"time"
 )
 
 func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {

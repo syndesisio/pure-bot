@@ -66,32 +66,34 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 			continue
 		}
 
-		prNumber, prURL := issue.GetNumber(), issue.GetHTMLURL()
-
-		message := fmt.Sprintf("Status check _%s_ returned **%s**.", event.GetContext(), state)
-		if event.GetTargetURL() != "" {
-			message += fmt.Sprintf(" See %s for more details.", event.GetTargetURL())
-		}
+		prNumber := issue.GetNumber()
 
 		existingComments, _, err := gh.Issues.ListComments(context.Background(), owner, repo, prNumber, &github.IssueListCommentsOptions{
 			Sort:      "updated",
 			Direction: "desc",
 		})
 		if err != nil {
-			return errors.Wrapf(err, "failed to retrieve existing comments on PR %s", prURL)
+			multiErr = multierr.Combine(multiErr, errors.Wrapf(err, "failed to retrieve existing comments on PR %s", issue.GetHTMLURL()))
+			continue
 		}
 
-		for _, existingComment := range existingComments {
-			if message == existingComment.GetBody() {
-				continue
-			}
+		message := fmt.Sprintf(":warning: Status check _%s_ returned **%s**.", event.GetContext(), state)
+		if event.GetDescription() != "" {
+			message += "\n\n" + event.GetDescription()
+		}
+		if event.GetTargetURL() != "" {
+			message += fmt.Sprintf("\n\nSee %s for more details.", event.GetTargetURL())
+		}
+		if commentsContainMessage(existingComments, message) {
+			continue
 		}
 
 		_, _, err = gh.Issues.CreateComment(context.Background(), owner, repo, prNumber, &github.IssueComment{
 			Body: &message,
 		})
 		if err != nil {
-			multiErr = multierr.Combine(multiErr, err)
+			multiErr = multierr.Combine(multiErr, errors.Wrapf(err, "failed to create comment on PR %s", issue.GetHTMLURL()))
+			continue
 		}
 	}
 
