@@ -15,14 +15,31 @@
 package webhook
 
 import (
+	"strings"
+	"unicode"
+
 	"github.com/google/go-github/github"
 )
 
+// Returns true if the `comments` slice contains `commentBody`, ignoring whitespace due
+// to the way that GitHub returns comment bodies, stripping new lines and potentially other
+// whitespace (weird!).
 func commentsContainMessage(comments []*github.IssueComment, commentBody string) bool {
 	for _, comment := range comments {
-		if comment.GetBody() == commentBody {
+		if stripSpaces(comment.GetBody()) == stripSpaces(commentBody) {
 			return true
 		}
 	}
 	return false
+}
+
+func stripSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		// If the character is a space ('\t', '\n', '\v', '\f', '\r', ' ', U+0085 (NEL), U+00A0 (NBSP)) as per unicode spec, drop it.
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		// Else keep it in the string.
+		return r
+	}, str)
 }
