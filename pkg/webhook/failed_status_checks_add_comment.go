@@ -66,14 +66,15 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 			continue
 		}
 
-		prNumber, prURL := issue.GetNumber(), issue.GetHTMLURL()
+		prNumber := issue.GetNumber()
 
 		existingComments, _, err := gh.Issues.ListComments(context.Background(), owner, repo, prNumber, &github.IssueListCommentsOptions{
 			Sort:      "updated",
 			Direction: "desc",
 		})
 		if err != nil {
-			return errors.Wrapf(err, "failed to retrieve existing comments on PR %s", prURL)
+			multiErr = multierr.Combine(multiErr, errors.Wrapf(err, "failed to retrieve existing comments on PR %s", issue.GetHTMLURL()))
+			continue
 		}
 
 		message := fmt.Sprintf(":warning: Status check _%s_ returned **%s**.", event.GetContext(), state)
@@ -91,7 +92,8 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 			Body: &message,
 		})
 		if err != nil {
-			multiErr = multierr.Combine(multiErr, err)
+			multiErr = multierr.Combine(multiErr, errors.Wrapf(err, "failed to create comment on PR %s", issue.GetHTMLURL()))
+			continue
 		}
 	}
 
