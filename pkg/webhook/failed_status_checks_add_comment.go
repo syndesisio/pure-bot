@@ -46,6 +46,12 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 		return nil
 	}
 
+	// CodeCov and Codacy already comment so let's just ignore those status checks... Noisy otherwise...
+	statusContext := event.GetContext()
+	if strings.HasPrefix(statusContext, "codecov/") || strings.HasPrefix(statusContext, "codacy/") {
+		return nil
+	}
+
 	gh, err := ghClientFunc(event.Installation.GetID())
 	if err != nil {
 		return errors.Wrap(err, "failed to create a GitHub client")
