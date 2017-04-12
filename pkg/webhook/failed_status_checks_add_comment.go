@@ -81,10 +81,8 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 			return errors.Wrapf(err, "failed to retrieve existing comments on PR %s", prURL)
 		}
 
-		for _, existingComment := range existingComments {
-			if message == existingComment.GetBody() {
-				continue
-			}
+		if commentsContainMessage(existingComments, message) {
+			continue
 		}
 
 		_, _, err = gh.Issues.CreateComment(context.Background(), owner, repo, prNumber, &github.IssueComment{
