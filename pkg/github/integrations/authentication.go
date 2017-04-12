@@ -21,13 +21,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const integrationsAcceptHeader = "application/vnd.github.machine-man-preview+json"

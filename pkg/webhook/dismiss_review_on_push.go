@@ -17,11 +17,11 @@ package webhook
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
-	"strings"
 )
 
 var (
