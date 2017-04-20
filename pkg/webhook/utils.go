@@ -19,6 +19,7 @@ import (
 	"strings"
 	"unicode"
 
+	"fmt"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 )
@@ -46,6 +47,65 @@ func stripSpaces(str string) string {
 	}, str)
 }
 
+func extractState(event *github.StatusEvent) string {
+	return strings.ToLower(event.GetState())
+}
+
+func checkStatusCheckPreconditions(event *github.StatusEvent) bool {
+	if event.Installation == nil {
+		return false
+	}
+
+	// CodeCov and Codacy already comment so let's just ignore those status checks... Noisy otherwise...
+	statusContext := event.GetContext()
+	if strings.HasPrefix(statusContext, "codecov/") || strings.HasPrefix(statusContext, "codacy/") {
+		return false
+	}
+	return true
+}
+
+func searchPullRequestsForCommit(gh *github.Client, event *github.StatusEvent) (*github.IssuesSearchResult, error) {
+	commitSHA := event.GetSHA()
+	query := fmt.Sprintf("type:pr state:open repo:%s %s", event.Repo.GetFullName(), commitSHA)
+	searchResult, _, err := gh.Search.Issues(context.Background(), query, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find issues / PRs using query %s", query)
+	}
+	return searchResult, nil
+}
+
+func listIssueComments(gh *github.Client, issue *github.Issue) ([]*github.IssueComment, error) {
+	prNumber, owner, repo := issue.GetNumber(), issue.Repository.Owner.GetLogin(), issue.Repository.GetName()
+
+	comments, _, err := gh.Issues.ListComments(context.Background(), owner, repo, prNumber, &github.IssueListCommentsOptions{
+		Sort:      "updated",
+		Direction: "desc",
+	})
+	return comments, err
+}
+
+func createIssueComment(gh *github.Client, issue *github.Issue, message string) error {
+	prNumber, owner, repo := issue.GetNumber(), issue.Repository.Owner.GetLogin(), issue.Repository.GetName()
+	_, _, err := gh.Issues.CreateComment(context.Background(), owner, repo, prNumber, &github.IssueComment{
+		Body: &message,
+	})
+	return err
+}
+
+func deleteIssueComment(gh *github.Client, issue *github.Issue, comment *github.IssueComment) error {
+	owner, repo := issue.Repository.Owner.GetLogin(), issue.Repository.GetName()
+	_, err := gh.Issues.DeleteComment(context.Background(), owner, repo, comment.GetID())
+	return err
+}
+
+func getStatusCheckMarker(event *github.StatusEvent) string {
+	statusContext := event.GetContext()
+	return "<!-- [[CHECK]]" + statusContext + "[[CHECK]] -->"
+}
+
+func containsStatusCommentCheck(comment *github.IssueComment, event *github.StatusEvent) bool {
+	return strings.Contains(comment.GetBody(), getStatusCheckMarker(event))
+}
 func containsLabel(labels []github.Label, label string) bool {
 	for _, l := range labels {
 		if strings.EqualFold(l.GetName(), label) {
@@ -70,8 +130,7 @@ func doesPRNeedReview(pr *github.PullRequest, repo *github.Repository, gh *githu
 		repo.Owner.GetLogin(),
 		repo.GetName(),
 		pr.GetNumber(),
-		nil,
-	)
+		nil)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to list reviewers for PR %s", pr.GetHTMLURL())
 	}
@@ -81,8 +140,7 @@ func doesPRNeedReview(pr *github.PullRequest, repo *github.Repository, gh *githu
 		repo.Owner.GetLogin(),
 		repo.GetName(),
 		pr.GetNumber(),
-		nil,
-	)
+		nil)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to list reviews for PR %s", pr.GetHTMLURL())
 	}
