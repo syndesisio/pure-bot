@@ -1,5 +1,5 @@
-hash: 0fbd7d0b251af84747f4b89d8c29451e4ad8de3643c16e44932ad87459279fc3
-updated: 2017-04-08T21:24:15.722343692+01:00
+hash: caf109f344668fa486b7592f8a8c2475b0c098cdbf283b79edbee1dd34f0ea44
+updated: 2017-04-27T10:54:16.628706209+01:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 2268707a8f0843315e2004ee4f1d021dc08baedf
@@ -10,7 +10,9 @@ imports:
   subpackages:
   - proto
 - name: github.com/google/go-github
-  version: d23570d44313ca73dbcaadec71fc43eca4d29f8b
+  version: 71d2c213bee3e755be461a19de871264f98f8d5a
+  repo: https://github.com/jimmidyson/go-github
+  vcs: git
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -18,7 +20,7 @@ imports:
   subpackages:
   - query
 - name: github.com/hashicorp/hcl
-  version: 630949a3c5fa3c613328e1b8256052cbc2327c9b
+  version: 7fa7fff964d035e8a162cce3a164b3ad02ad651b
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -33,7 +35,7 @@ imports:
 - name: github.com/magiconair/properties
   version: 51463bfca2576e06c62a8504b5c0f06d61312647
 - name: github.com/mitchellh/mapstructure
-  version: 53818660ed4955e899c0bcafa97299a388bd7c8e
+  version: cc8532a8e9a55ea36402aa21efdf403a60d34096
 - name: github.com/pelletier/go-buffruneio
   version: c37440a7cf42ac63b919c752ca73a85067e05992
 - name: github.com/pelletier/go-toml
@@ -45,21 +47,21 @@ imports:
   subpackages:
   - mem
 - name: github.com/spf13/cast
-  version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
+  version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
-  version: 7aeaa2cce6ae7e18d2a6ee597b60ee137e999bd9
+  version: 6dd90846ba124894ee1206c89021e90e8179f1a4
 - name: github.com/spf13/jwalterweatherman
   version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
 - name: github.com/spf13/pflag
-  version: d16db1e50e33dff1b6cdf37596cef36742128670
+  version: 314c91c3e94238576bab29cbcdd44b57ab8e0d39
 - name: github.com/spf13/viper
-  version: 84f94806c67f59dd7ae87bc5351f7a9c94a4558d
+  version: 0967fc9aceab2ce9da34061253ac10fb99bba5b2
 - name: go.uber.org/atomic
-  version: 3b8db5e93c4c02efbc313e17b2e796b0914a01fb
+  version: 4e336646b2ef9fc6e47be8e21594178f98e5ebcf
 - name: go.uber.org/multierr
-  version: 737b41aa3bf31c25d11dc84d5275af6bfe2ef4d2
+  version: a3d1fc1f1316d4132fc61f4ea1159ae0613fb474
 - name: go.uber.org/zap
-  version: a2773be06b9ac7c318a3a105b5c310af5730c6b4
+  version: 6a4e056f2cc954cfec3581729e758909604b3f76
   subpackages:
   - buffer
   - internal/bufferpool
@@ -68,20 +70,20 @@ imports:
   - internal/multierror
   - zapcore
 - name: golang.org/x/net
-  version: ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 493114f68206f85e7e333beccfabc11e98cba8dd
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
   - transform
   - unicode/norm
 - name: google.golang.org/appengine
-  version: 56d253d1dd14aa01937e12c73a0971bcfd797ff2
+  version: 170382fa85b10b94728989dfcf6cc818b335c952
   subpackages:
   - internal
   - internal/app_identity
@@ -91,5 +93,5 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []
