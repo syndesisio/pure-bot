@@ -1,7 +1,7 @@
 # PuRe Bot
-[![CircleCI branch](https://img.shields.io/circleci/project/github/redhat-ipaas/pure-bot/master.svg)](https://circleci.com/gh/redhat-ipaas/pure-bot)
-[![license](https://img.shields.io/github/license/redhat-ipaas/pure-bot.svg)](https://raw.githubusercontent.com/redhat-ipaas/pure-bot/master/LICENSE)
-[![Docker Automated buil](https://img.shields.io/docker/automated/redhat-ipaas/pure-bot.svg)](https://hub.docker.com/r/rhipaas/pure-bot/)
+[![CircleCI branch](https://img.shields.io/circleci/project/github/syndesisio/pure-bot/master.svg)](https://circleci.com/gh/syndesisio/pure-bot)
+[![license](https://img.shields.io/github/license/syndesisio/pure-bot.svg)](https://raw.githubusercontent.com/syndesisio/pure-bot/master/LICENSE)
+[![Docker Automated buil](https://img.shields.io/docker/automated/syndesisio/pure-bot.svg)](https://hub.docker.com/r/rhipaas/pure-bot/)
 
 **Pu**ll **Re**quest Bot enables automated pull request workflows, reacting to input from webhooks and
 performing actions as configured.

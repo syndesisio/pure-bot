@@ -15,10 +15,10 @@
 BIN := pure-bot
 
 # This repo's root import path (under GOPATH).
-PKG := github.com/redhat-ipaas/pure-bot
+PKG := github.com/syndesisio/pure-bot
 
 # Where to push the docker image.
-REGISTRY ?= rhipaas
+REGISTRY ?= syndesis
 
 # Which architecture to build - see $(ALL_ARCH) for options.
 ARCH ?= amd64
@@ -28,7 +28,7 @@ BUILD_DATE := $(shell date -u)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --dirty --always)
 
 OPENSHIFT_IMAGE_STREAM ?= pure-bot:deploy
-OPENSHIFT_CLIENT_IMAGE ?= openshift/origin:v1.5.0-rc.0
+OPENSHIFT_CLIENT_IMAGE ?= openshift/origin:v1.5.1
 
 #
 # This version-strategy uses a manual value to set the version string
@@ -42,18 +42,18 @@ ALL_ARCH := amd64 arm arm64
 
 # Set default base image dynamically for each arch
 ifeq ($(ARCH),amd64)
-    BASEIMAGE?=alpine:3.5
+    BASEIMAGE?=alpine:3.6
 endif
 ifeq ($(ARCH),arm)
-    BASEIMAGE?=armhf/alpine:3.5
+    BASEIMAGE?=armhf/alpine:3.6
 endif
 ifeq ($(ARCH),arm64)
-    BASEIMAGE?=owlab/alpine-arm64:3.5
+    BASEIMAGE?=owlab/alpine-arm64:3.6
 endif
 
 IMAGE := $(REGISTRY)/$(BIN)
 
-GOVERSION ?= 1.8.1
+GOVERSION ?= 1.8.3
 BUILD_IMAGE ?= golang:$(GOVERSION)-alpine
 GOLANG_IMAGE ?= golang:$(GOVERSION)
 

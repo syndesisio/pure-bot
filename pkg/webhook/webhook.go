@@ -21,9 +21,10 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"github.com/redhat-ipaas/pure-bot/pkg/config"
-	"github.com/redhat-ipaas/pure-bot/pkg/github/integrations"
 	"go.uber.org/multierr"
+
+	"github.com/syndesisio/pure-bot/pkg/config"
+	"github.com/syndesisio/pure-bot/pkg/github/integrations"
 	"go.uber.org/zap"
 )
 

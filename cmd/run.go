@@ -25,8 +25,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/redhat-ipaas/pure-bot/pkg/http"
-	"github.com/redhat-ipaas/pure-bot/pkg/webhook"
+	"github.com/syndesisio/pure-bot/pkg/http"
+	"github.com/syndesisio/pure-bot/pkg/webhook"
 )
 
 // runCmd represents the run command

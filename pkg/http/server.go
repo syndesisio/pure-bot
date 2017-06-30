@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/redhat-ipaas/pure-bot/pkg/config"
+	"github.com/syndesisio/pure-bot/pkg/config"
 )
 
 func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {

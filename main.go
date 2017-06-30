@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/redhat-ipaas/pure-bot/cmd"
+import "github.com/syndesisio/pure-bot/cmd"
 
 func main() {
 	cmd.Execute()

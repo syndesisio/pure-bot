@@ -22,8 +22,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/redhat-ipaas/pure-bot/pkg/config"
-	"github.com/redhat-ipaas/pure-bot/pkg/version"
+	"github.com/syndesisio/pure-bot/pkg/config"
+	"github.com/syndesisio/pure-bot/pkg/version"
 )
 
 var (

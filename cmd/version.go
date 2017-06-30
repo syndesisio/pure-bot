@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-ipaas/pure-bot/pkg/version"
+	"github.com/syndesisio/pure-bot/pkg/version"
 )
 
 // versionCmd represents the version command
