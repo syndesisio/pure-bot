@@ -55,7 +55,7 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, eventObject interface
 		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
-	reviews, _, err := gh.PullRequests.ListReviews(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber())
+	reviews, _, err := gh.PullRequests.ListReviews(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), &github.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get pull request")
 	}
