@@ -99,7 +99,7 @@ bin/$(ARCH)/$(BIN): vendor build-dirs
 	        ./build/build.sh                                                 \
 	    "
 
-vendor: build-dirs .vendor glide.lock glide.yaml
+vendor: build-dirs .vendor Gopkg.lock Gopkg.toml
 .vendor:
 	@echo "updating vendored deps"
 	@docker run                                                              \

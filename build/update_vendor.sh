@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-command -v glide >/dev/null 2>&1 || go get github.com/Masterminds/glide
-glide install
+command -v dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
+dep ensure -v
