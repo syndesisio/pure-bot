@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -33,6 +35,8 @@ const (
 )
 
 type autoMerger struct{}
+
+var issueRegex = regexp.MustCompile("[^(]*\\(#(\\d+)\\).*")
 
 func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
 	switch event := eventObject.(type) {
@@ -167,6 +171,43 @@ func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, c
 	})
 	if err != nil {
 		return errors.Wrapf(err, "failed to merge pull request %s", issue.GetHTMLURL())
+	}
+
+	commits, _, err := gh.PullRequests.ListCommits(context.Background(), owner, repository, issue.GetNumber(), nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed fetch pull request commits %s", issue.GetHTMLURL())
+	}
+
+	fixes := make([]int, 0, 10)
+commit_loop:
+	for _, commit := range commits {
+		msg := commit.Commit.GetMessage()
+		issues := issueRegex.FindStringSubmatch(msg) // we only want the first one
+		if issues != nil {
+			issue, _ := strconv.Atoi(issues[1])
+			for _, existing := range fixes {
+				if existing == issue {
+					continue commit_loop
+				}
+			}
+			fixes = append(fixes, issue)
+		}
+	}
+
+	comment := ""
+	for _, fix := range fixes {
+		if comment == "" {
+			comment = fmt.Sprintf("Fixes %d", fix)
+		} else {
+			comment += fmt.Sprintf(", fixes %d", fix)
+		}
+	}
+
+	_, _, err = gh.PullRequests.CreateComment(context.Background(), owner, repository, *pr.ID, &github.PullRequestComment{
+		Body: &comment,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to create pull request comment %s", issue.GetHTMLURL())
 	}
 
 	return nil
