@@ -163,7 +163,8 @@ func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, c
 	}
 
 	_, _, err = gh.PullRequests.Merge(context.Background(), owner, repository, issue.GetNumber(), "", &github.PullRequestOptions{
-		SHA: commitSHA,
+		SHA:         commitSHA,
+		MergeMethod: "squash",
 	})
 	if err != nil {
 		return errors.Wrapf(err, "failed to merge pull request %s", issue.GetHTMLURL())
