@@ -145,7 +145,9 @@ func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, c
 
 	requiredContexts, _, err := gh.Repositories.ListRequiredStatusChecksContexts(context.Background(), owner, repository, pr.Base.GetRef())
 	if err != nil {
-		return errors.Wrapf(err, "failed to get target branch (%s) protection for pull request %s", pr.Base.GetRef(), issue.GetHTMLURL())
+		if errResp, ok := err.(*github.ErrorResponse); !ok || errResp.Response.StatusCode != http.StatusNotFound {
+			return errors.Wrapf(err, "failed to get target branch (%s) protection for pull request %s", pr.Base.GetRef(), issue.GetHTMLURL())
+		}
 	}
 
 	if len(requiredContexts) == 0 {
