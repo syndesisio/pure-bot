@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
@@ -28,8 +28,7 @@ BUILD_DATE := $(shell date -u)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --dirty --always)
 
 OPENSHIFT_IMAGE_STREAM ?= pure-bot:deploy
-OPENSHIFT_CLIENT_IMAGE ?= openshift/origin:v1.5.1
-
+OPENSHIFT_CLIENT_IMAGE ?= openshift/origin:v3.7.0-rc.0
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -53,7 +52,7 @@ endif
 
 IMAGE := $(REGISTRY)/$(BIN)
 
-GOVERSION ?= 1.8.3
+GOVERSION ?= 1.9.2
 BUILD_IMAGE ?= golang:$(GOVERSION)-alpine
 GOLANG_IMAGE ?= golang:$(GOVERSION)
 
@@ -81,35 +80,51 @@ build: bin/$(ARCH)/$(BIN)
 
 bin/$(ARCH)/$(BIN): vendor build-dirs
 	@echo "building: $@"
-	@docker run                                                              \
-	    -ti                                                                  \
-	    -u $$(id -u):$$(id -g)                                               \
-	    -v $$(pwd)/.go:/go:Z                                                 \
-	    -v $$(pwd):/go/src/$(PKG):Z                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin:Z                                     \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH):Z                       \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z  \
-	    -w /go/src/$(PKG)                                                    \
-	    $(BUILD_IMAGE)                                                       \
-	    /bin/sh -c "                                                         \
-	        ARCH=$(ARCH)                                                     \
-	        VERSION=$(VERSION)                                               \
-			BUILD_DATE=\"$(BUILD_DATE)\"                                     \
-	        PKG=$(PKG)                                                       \
-	        ./build/build.sh                                                 \
+	@docker run                                                                \
+	    -ti                                                                    \
+	    -u $$(id -u):$$(id -g)                                                 \
+	    -v "$$(pwd)/.go:/go:Z"                                                 \
+	    -v "$$(pwd):/go/src/$(PKG):Z"                                          \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin:Z"                                     \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH):Z"                       \
+	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z"  \
+	    -w /go/src/$(PKG)                                                      \
+	    $(BUILD_IMAGE)                                                         \
+	    /bin/sh -c "                                                           \
+	        ARCH=$(ARCH)                                                       \
+	        VERSION=$(VERSION)                                                 \
+	        BUILD_DATE=\"$(BUILD_DATE)\"                                       \
+	        PKG=$(PKG)                                                         \
+	        ./build/build.sh                                                   \
 	    "
+
+# Example: make shell CMD="-c 'date > datefile'"
+shell: build-dirs
+	@echo "launching a shell in the containerized build environment"
+	@docker run                                                                \
+	    -ti                                                                    \
+	    --rm                                                                   \
+	    -u $$(id -u):$$(id -g)                                                 \
+	    -v "$$(pwd)/.go:/go":Z                                                 \
+	    -v "$$(pwd):/go/src/$(PKG)":Z                                          \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin":Z                                     \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin/$$(go env GOOS)_$(ARCH)":Z             \
+	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static":Z  \
+	    -w /go/src/$(PKG)                                                      \
+	    $(BUILD_IMAGE)                                                         \
+	    /bin/sh $(CMD)
 
 vendor: build-dirs .vendor Gopkg.lock Gopkg.toml
 .vendor:
 	@echo "updating vendored deps"
-	@docker run                                                              \
-	    -ti                                                                  \
-	    -v $$(pwd):/go/src/$(PKG):Z                                         \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin:Z                                     \
-	    -w /go/src/$(PKG)                                                    \
-	    $(GOLANG_IMAGE)                                                     \
-	    /bin/sh -c "                                                         \
-	        ./build/update_vendor.sh                                         \
+	@docker run                                                                \
+	    -ti                                                                    \
+	    -v "$$(pwd):/go/src/$(PKG):Z"                                          \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin:Z"                                     \
+	    -w /go/src/$(PKG)                                                      \
+	    $(GOLANG_IMAGE)                                                        \
+	    /bin/sh -c "                                                           \
+	        ./build/update_vendor.sh                                           \
 	    "
 	@touch .vendor
 
@@ -152,17 +167,17 @@ version:
 	@echo $(VERSION)
 
 test: build-dirs
-	@docker run                                                              \
-	    -ti                                                                  \
-	    -u $$(id -u):$$(id -g)                                               \
-	    -v $$(pwd)/.go:/go:Z                                                 \
-	    -v $$(pwd):/go/src/$(PKG):Z                                          \
-	    -v $$(pwd)/bin/$(ARCH):/go/bin:Z                                     \
-	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z  \
-	    -w /go/src/$(PKG)                                                    \
-	    $(BUILD_IMAGE)                                                       \
-	    /bin/sh -c "                                                         \
-	        ./build/test.sh                                                  \
+	@docker run                                                                \
+	    -ti                                                                    \
+	    -u $$(id -u):$$(id -g)                                                 \
+	    -v "$$(pwd)/.go:/go:Z"                                                 \
+	    -v "$$(pwd):/go/src/$(PKG):Z"                                          \
+	    -v "$$(pwd)/bin/$(ARCH):/go/bin:Z"                                     \
+	    -v "$$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:Z"  \
+	    -w /go/src/$(PKG)                                                      \
+	    $(BUILD_IMAGE)                                                         \
+	    /bin/sh -c "                                                           \
+	        ./build/test.sh                                                    \
 	    "
 
 build-dirs:
