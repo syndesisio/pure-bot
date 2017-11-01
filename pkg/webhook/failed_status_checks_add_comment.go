@@ -37,12 +37,12 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 		return errors.New("wrong event eventObject type")
 	}
 
-	state := strings.ToLower(event.GetState())
-	if state == "pending" || state == "success" {
+	if event.Installation == nil {
 		return nil
 	}
 
-	if event.Installation == nil {
+	state := strings.ToLower(event.GetState())
+	if state == "pending" || state == "success" {
 		return nil
 	}
 

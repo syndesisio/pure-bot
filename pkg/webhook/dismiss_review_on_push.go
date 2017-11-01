@@ -38,15 +38,11 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, eventObject interface
 		return errors.New("wrong event eventObject type")
 	}
 
-	if event.Action == nil {
-		return nil
-	}
-	action := strings.ToLower(event.GetAction())
-	if action != "synchronize" {
+	if event.Installation == nil {
 		return nil
 	}
 
-	if event.Installation == nil {
+	if strings.ToLower(event.GetAction()) != "synchronize" {
 		return nil
 	}
 
