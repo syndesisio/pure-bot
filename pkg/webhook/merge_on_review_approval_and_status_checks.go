@@ -74,7 +74,7 @@ func (h *autoMerger) mergePRFromPullRequestEvent(installationID int, repo *githu
 		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
 	}
 
-	return mergePR(issue, repo.Owner.GetLogin(), repo.GetName(), gh, "")
+	return mergePR(issue, pullRequest, repo.Owner.GetLogin(), repo.GetName(), gh, "")
 }
 
 func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.StatusEvent, ghClientFunc GitHubIntegrationsClientFunc) error {
@@ -103,32 +103,25 @@ func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.Stat
 			continue
 		}
 
-		err := mergePR(&issue, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA)
+		pr, _, err := gh.PullRequests.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), issue.GetNumber())
 		if err != nil {
 			multiErr = multierr.Combine(multiErr, err)
+			continue
+		}
+
+		err = mergePR(&issue, pr, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA)
+		if err != nil {
+			multiErr = multierr.Combine(multiErr, err)
+			continue
 		}
 	}
 
 	return multiErr
 }
 
-func containsLabel(labels []github.Label, label string) bool {
-	for _, l := range labels {
-		if *l.Name == label {
-			return true
-		}
-	}
-	return false
-}
-
-func mergePR(issue *github.Issue, owner, repository string, gh *github.Client, commitSHA string) error {
+func mergePR(issue *github.Issue, pr *github.PullRequest, owner, repository string, gh *github.Client, commitSHA string) error {
 	if !containsLabel(issue.Labels, approvedLabel) {
 		return nil
-	}
-
-	pr, _, err := gh.PullRequests.Get(context.Background(), owner, repository, issue.GetNumber())
-	if err != nil {
-		return errors.Wrapf(err, "failed to get pull request %s", issue.GetHTMLURL())
 	}
 
 	if commitSHA != "" && pr.Head.GetSHA() != commitSHA {

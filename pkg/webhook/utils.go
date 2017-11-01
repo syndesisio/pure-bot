@@ -43,3 +43,12 @@ func stripSpaces(str string) string {
 		return r
 	}, str)
 }
+
+func containsLabel(labels []github.Label, label string) bool {
+	for _, l := range labels {
+		if l.GetName() == label {
+			return true
+		}
+	}
+	return false
+}
