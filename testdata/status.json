@@ -1,8 +1,8 @@
 {
   "id": 1128630461,
   "sha": "f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
-  "name": "redhat-ipaas/ipaas-rest",
-  "target_url": "https://ci.fabric8.io/job/redhat-ipaas-rest-pullreq/444/",
+  "name": "syndesisio/syndesis-rest",
+  "target_url": "https://ci.fabric8.io/job/syndesisio-rest-pullreq/444/",
   "context": "default",
   "description": "Build finished. ",
   "state": "success",
@@ -22,14 +22,19 @@
       "message": "issue #274",
       "tree": {
         "sha": "f931cc273199621095a26ac323ba0556ad972a2e",
-        "url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/trees/f931cc273199621095a26ac323ba0556ad972a2e"
+        "url":
+          "https://api.github.com/repos/syndesisio/syndesis-rest/git/trees/f931cc273199621095a26ac323ba0556ad972a2e"
       },
-      "url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
+      "url":
+        "https://api.github.com/repos/syndesisio/syndesis-rest/git/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
       "comment_count": 0
     },
-    "url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
-    "html_url": "https://github.com/redhat-ipaas/ipaas-rest/commit/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
-    "comments_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc/comments",
+    "url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
+    "html_url":
+      "https://github.com/syndesisio/syndesis-rest/commit/f3fcd127156321437e78f1d57ba3ecb0b39bbabc",
+    "comments_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/commits/f3fcd127156321437e78f1d57ba3ecb0b39bbabc/comments",
     "author": {
       "login": "KurtStam",
       "id": 35576,
@@ -38,14 +43,18 @@
       "url": "https://api.github.com/users/KurtStam",
       "html_url": "https://github.com/KurtStam",
       "followers_url": "https://api.github.com/users/KurtStam/followers",
-      "following_url": "https://api.github.com/users/KurtStam/following{/other_user}",
+      "following_url":
+        "https://api.github.com/users/KurtStam/following{/other_user}",
       "gists_url": "https://api.github.com/users/KurtStam/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/KurtStam/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/KurtStam/subscriptions",
+      "starred_url":
+        "https://api.github.com/users/KurtStam/starred{/owner}{/repo}",
+      "subscriptions_url":
+        "https://api.github.com/users/KurtStam/subscriptions",
       "organizations_url": "https://api.github.com/users/KurtStam/orgs",
       "repos_url": "https://api.github.com/users/KurtStam/repos",
       "events_url": "https://api.github.com/users/KurtStam/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/KurtStam/received_events",
+      "received_events_url":
+        "https://api.github.com/users/KurtStam/received_events",
       "type": "User",
       "site_admin": false
     },
@@ -57,101 +66,142 @@
       "url": "https://api.github.com/users/KurtStam",
       "html_url": "https://github.com/KurtStam",
       "followers_url": "https://api.github.com/users/KurtStam/followers",
-      "following_url": "https://api.github.com/users/KurtStam/following{/other_user}",
+      "following_url":
+        "https://api.github.com/users/KurtStam/following{/other_user}",
       "gists_url": "https://api.github.com/users/KurtStam/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/KurtStam/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/KurtStam/subscriptions",
+      "starred_url":
+        "https://api.github.com/users/KurtStam/starred{/owner}{/repo}",
+      "subscriptions_url":
+        "https://api.github.com/users/KurtStam/subscriptions",
       "organizations_url": "https://api.github.com/users/KurtStam/orgs",
       "repos_url": "https://api.github.com/users/KurtStam/repos",
       "events_url": "https://api.github.com/users/KurtStam/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/KurtStam/received_events",
+      "received_events_url":
+        "https://api.github.com/users/KurtStam/received_events",
       "type": "User",
       "site_admin": false
     },
     "parents": [
       {
         "sha": "52bff60448a31d811b937beb8d866c8933601a4f",
-        "url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/commits/52bff60448a31d811b937beb8d866c8933601a4f",
-        "html_url": "https://github.com/redhat-ipaas/ipaas-rest/commit/52bff60448a31d811b937beb8d866c8933601a4f"
+        "url":
+          "https://api.github.com/repos/syndesisio/syndesis-rest/commits/52bff60448a31d811b937beb8d866c8933601a4f",
+        "html_url":
+          "https://github.com/syndesisio/syndesis-rest/commit/52bff60448a31d811b937beb8d866c8933601a4f"
       }
     ]
   },
-  "branches": [
-
-  ],
+  "branches": [],
   "created_at": "2017-04-04T17:13:08Z",
   "updated_at": "2017-04-04T17:13:08Z",
   "repository": {
     "id": 75404146,
-    "name": "ipaas-rest",
-    "full_name": "redhat-ipaas/ipaas-rest",
+    "name": "syndesis-rest",
+    "full_name": "syndesisio/syndesis-rest",
     "owner": {
-      "login": "redhat-ipaas",
+      "login": "syndesisio",
       "id": 23079786,
       "avatar_url": "https://avatars0.githubusercontent.com/u/23079786?v=3",
       "gravatar_id": "",
-      "url": "https://api.github.com/users/redhat-ipaas",
-      "html_url": "https://github.com/redhat-ipaas",
-      "followers_url": "https://api.github.com/users/redhat-ipaas/followers",
-      "following_url": "https://api.github.com/users/redhat-ipaas/following{/other_user}",
-      "gists_url": "https://api.github.com/users/redhat-ipaas/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/redhat-ipaas/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/redhat-ipaas/subscriptions",
-      "organizations_url": "https://api.github.com/users/redhat-ipaas/orgs",
-      "repos_url": "https://api.github.com/users/redhat-ipaas/repos",
-      "events_url": "https://api.github.com/users/redhat-ipaas/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/redhat-ipaas/received_events",
+      "url": "https://api.github.com/users/syndesisio",
+      "html_url": "https://github.com/syndesisio",
+      "followers_url": "https://api.github.com/users/syndesisio/followers",
+      "following_url":
+        "https://api.github.com/users/syndesisio/following{/other_user}",
+      "gists_url": "https://api.github.com/users/syndesisio/gists{/gist_id}",
+      "starred_url":
+        "https://api.github.com/users/syndesisio/starred{/owner}{/repo}",
+      "subscriptions_url":
+        "https://api.github.com/users/syndesisio/subscriptions",
+      "organizations_url": "https://api.github.com/users/syndesisio/orgs",
+      "repos_url": "https://api.github.com/users/syndesisio/repos",
+      "events_url": "https://api.github.com/users/syndesisio/events{/privacy}",
+      "received_events_url":
+        "https://api.github.com/users/syndesisio/received_events",
       "type": "Organization",
       "site_admin": false
     },
     "private": false,
-    "html_url": "https://github.com/redhat-ipaas/ipaas-rest",
-    "description": "The API for Syndesis - a flexible, customizable, cloud-hosted platform that provides core integration capabilities as a service. It leverages Red Hat's existing product architecture using OpenShift Online/Dedicated and Fuse Integration Services.",
+    "html_url": "https://github.com/syndesisio/syndesis-rest",
+    "description":
+      "The API for Syndesis - a flexible, customizable, cloud-hosted platform that provides core integration capabilities as a service. It leverages Red Hat's existing product architecture using OpenShift Online/Dedicated and Fuse Integration Services.",
     "fork": false,
-    "url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest",
-    "forks_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/forks",
-    "keys_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/keys{/key_id}",
-    "collaborators_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/collaborators{/collaborator}",
-    "teams_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/teams",
-    "hooks_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/hooks",
-    "issue_events_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/issues/events{/number}",
-    "events_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/events",
-    "assignees_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/assignees{/user}",
-    "branches_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/branches{/branch}",
-    "tags_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/tags",
-    "blobs_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/blobs{/sha}",
-    "git_tags_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/tags{/sha}",
-    "git_refs_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/refs{/sha}",
-    "trees_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/trees{/sha}",
-    "statuses_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/statuses/{sha}",
-    "languages_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/languages",
-    "stargazers_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/stargazers",
-    "contributors_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/contributors",
-    "subscribers_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/subscribers",
-    "subscription_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/subscription",
-    "commits_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/commits{/sha}",
-    "git_commits_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/git/commits{/sha}",
-    "comments_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/comments{/number}",
-    "issue_comment_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/issues/comments{/number}",
-    "contents_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/contents/{+path}",
-    "compare_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/compare/{base}...{head}",
-    "merges_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/merges",
-    "archive_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/{archive_format}{/ref}",
-    "downloads_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/downloads",
-    "issues_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/issues{/number}",
-    "pulls_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/pulls{/number}",
-    "milestones_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/milestones{/number}",
-    "notifications_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/notifications{?since,all,participating}",
-    "labels_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/labels{/name}",
-    "releases_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/releases{/id}",
-    "deployments_url": "https://api.github.com/repos/redhat-ipaas/ipaas-rest/deployments",
+    "url": "https://api.github.com/repos/syndesisio/syndesis-rest",
+    "forks_url": "https://api.github.com/repos/syndesisio/syndesis-rest/forks",
+    "keys_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/keys{/key_id}",
+    "collaborators_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/collaborators{/collaborator}",
+    "teams_url": "https://api.github.com/repos/syndesisio/syndesis-rest/teams",
+    "hooks_url": "https://api.github.com/repos/syndesisio/syndesis-rest/hooks",
+    "issue_events_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/issues/events{/number}",
+    "events_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/events",
+    "assignees_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/assignees{/user}",
+    "branches_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/branches{/branch}",
+    "tags_url": "https://api.github.com/repos/syndesisio/syndesis-rest/tags",
+    "blobs_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/git/blobs{/sha}",
+    "git_tags_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/git/tags{/sha}",
+    "git_refs_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/git/refs{/sha}",
+    "trees_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/git/trees{/sha}",
+    "statuses_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/statuses/{sha}",
+    "languages_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/languages",
+    "stargazers_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/stargazers",
+    "contributors_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/contributors",
+    "subscribers_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/subscribers",
+    "subscription_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/subscription",
+    "commits_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/commits{/sha}",
+    "git_commits_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/git/commits{/sha}",
+    "comments_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/comments{/number}",
+    "issue_comment_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/issues/comments{/number}",
+    "contents_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/contents/{+path}",
+    "compare_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/compare/{base}...{head}",
+    "merges_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/merges",
+    "archive_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/{archive_format}{/ref}",
+    "downloads_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/downloads",
+    "issues_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/issues{/number}",
+    "pulls_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/pulls{/number}",
+    "milestones_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/milestones{/number}",
+    "notifications_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/notifications{?since,all,participating}",
+    "labels_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/labels{/name}",
+    "releases_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/releases{/id}",
+    "deployments_url":
+      "https://api.github.com/repos/syndesisio/syndesis-rest/deployments",
     "created_at": "2016-12-02T14:49:12Z",
     "updated_at": "2017-03-30T09:47:44Z",
     "pushed_at": "2017-04-04T17:11:10Z",
-    "git_url": "git://github.com/redhat-ipaas/ipaas-rest.git",
-    "ssh_url": "git@github.com:redhat-ipaas/ipaas-rest.git",
-    "clone_url": "https://github.com/redhat-ipaas/ipaas-rest.git",
-    "svn_url": "https://github.com/redhat-ipaas/ipaas-rest",
+    "git_url": "git://github.com/syndesisio/syndesis-rest.git",
+    "ssh_url": "git@github.com:syndesisio/syndesis-rest.git",
+    "clone_url": "https://github.com/syndesisio/syndesis-rest.git",
+    "svn_url": "https://github.com/syndesisio/syndesis-rest",
     "homepage": "https://ipaas-staging.b6ff.rh-idev.openshiftapps.com/api/v1/",
     "size": 1637,
     "stargazers_count": 5,
@@ -171,17 +221,19 @@
     "default_branch": "master"
   },
   "organization": {
-    "login": "redhat-ipaas",
+    "login": "syndesisio",
     "id": 23079786,
-    "url": "https://api.github.com/orgs/redhat-ipaas",
-    "repos_url": "https://api.github.com/orgs/redhat-ipaas/repos",
-    "events_url": "https://api.github.com/orgs/redhat-ipaas/events",
-    "hooks_url": "https://api.github.com/orgs/redhat-ipaas/hooks",
-    "issues_url": "https://api.github.com/orgs/redhat-ipaas/issues",
-    "members_url": "https://api.github.com/orgs/redhat-ipaas/members{/member}",
-    "public_members_url": "https://api.github.com/orgs/redhat-ipaas/public_members{/member}",
+    "url": "https://api.github.com/orgs/syndesisio",
+    "repos_url": "https://api.github.com/orgs/syndesisio/repos",
+    "events_url": "https://api.github.com/orgs/syndesisio/events",
+    "hooks_url": "https://api.github.com/orgs/syndesisio/hooks",
+    "issues_url": "https://api.github.com/orgs/syndesisio/issues",
+    "members_url": "https://api.github.com/orgs/syndesisio/members{/member}",
+    "public_members_url":
+      "https://api.github.com/orgs/syndesisio/public_members{/member}",
     "avatar_url": "https://avatars0.githubusercontent.com/u/23079786?v=3",
-    "description": "A flexible, customizable, cloud-hosted platform that provides core integration capabilities as a service."
+    "description":
+      "A flexible, customizable, cloud-hosted platform that provides core integration capabilities as a service."
   },
   "sender": {
     "login": "fusesource-ci",
@@ -191,14 +243,18 @@
     "url": "https://api.github.com/users/fusesource-ci",
     "html_url": "https://github.com/fusesource-ci",
     "followers_url": "https://api.github.com/users/fusesource-ci/followers",
-    "following_url": "https://api.github.com/users/fusesource-ci/following{/other_user}",
+    "following_url":
+      "https://api.github.com/users/fusesource-ci/following{/other_user}",
     "gists_url": "https://api.github.com/users/fusesource-ci/gists{/gist_id}",
-    "starred_url": "https://api.github.com/users/fusesource-ci/starred{/owner}{/repo}",
-    "subscriptions_url": "https://api.github.com/users/fusesource-ci/subscriptions",
+    "starred_url":
+      "https://api.github.com/users/fusesource-ci/starred{/owner}{/repo}",
+    "subscriptions_url":
+      "https://api.github.com/users/fusesource-ci/subscriptions",
     "organizations_url": "https://api.github.com/users/fusesource-ci/orgs",
     "repos_url": "https://api.github.com/users/fusesource-ci/repos",
     "events_url": "https://api.github.com/users/fusesource-ci/events{/privacy}",
-    "received_events_url": "https://api.github.com/users/fusesource-ci/received_events",
+    "received_events_url":
+      "https://api.github.com/users/fusesource-ci/received_events",
     "type": "User",
     "site_admin": false
   },
