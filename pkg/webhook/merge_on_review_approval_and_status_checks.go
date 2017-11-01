@@ -94,6 +94,9 @@ func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.Stat
 	commitSHA := event.GetSHA()
 	query := fmt.Sprintf("type:pr state:open repo:%s %s", event.Repo.GetFullName(), commitSHA)
 	searchResult, _, err := gh.Search.Issues(context.Background(), query, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to search for open issues")
+	}
 	var multiErr error
 	for _, issue := range searchResult.Issues {
 		if issue.PullRequestLinks == nil {
