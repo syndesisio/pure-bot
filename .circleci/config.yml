@@ -14,12 +14,15 @@
 
 version: 2
 
+job_defaults: &job_defaults
+  working_directory: /go/src/github.com/syndesisio/pure-bot
+
 jobs:
   build:
+    <<: *job_defaults
+
     docker:
     - image: docker:17.09.0-ce-git
-
-    working_directory: /go/src/github.com/syndesisio/pure-bot
 
     steps:
     - checkout
@@ -30,18 +33,14 @@ jobs:
     - run:
         name: Build Docker image
         command: |
+          VERSION=$(git describe --match 'v[0-9]*' --dirty --always)
           docker build \
-            --build-arg VERSION="$(git describe --match 'v[0-9]*' --dirty --always)" \
+            --build-arg VERSION="${VERSION}" \
             --build-arg BUILD_DATE="$(date -u)" \
             --no-cache \
             -f .circleci/Dockerfile \
-            -t syndesis/pure-bot:latest .
+            -t syndesis/pure-bot:${VERSION} .
 
-# machine:
-#   pre:
-#   - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
-#   services:
-#   - docker
 
 # dependencies:
 #   override:
