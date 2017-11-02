@@ -41,6 +41,53 @@ jobs:
             -f .circleci/Dockerfile \
             -t syndesis/pure-bot:${VERSION} .
 
+  test:
+    <<: *job_defaults
+
+    docker:
+    - image: golang:1.9.2
+
+    steps:
+    - checkout
+
+    - run:
+        name: Update dependencies
+        command: |
+          command -v dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
+          dep ensure -v
+
+    - run:
+        name: Run tests
+        command: |
+          TARGETS=$(go list ./... | grep -v /vendor/)
+          CGO_ENABLED=0 GOOS=linux go test -i -installsuffix "static" ${TARGETS}
+          CGO_ENABLED=0 GOOS=linux go test -cover -installsuffix "static" ${TARGETS}
+
+    - run:
+        name: Check gofmt
+        command: |
+          ERRS=$(find "$@" -type f ! -path '*/vendor/*' -name \*.go | xargs gofmt -l 2>&1 || true)
+          if [ -n "${ERRS}" ]; then
+              echo "The following files need to be gofmt'ed:"
+              echo
+              for e in ${ERRS}; do
+                  echo "    $e"
+              done
+              exit 1
+          fi
+
+    - run:
+        name: Run go vet
+        command: |
+          TARGETS=$(go list ./... | grep -v /vendor/)
+          ERRS=$(go vet ${TARGETS} 2>&1 || true)
+          echo "There are go vet errors:"
+          echo
+          if [ -n "${ERRS}" ]; then
+              echo "${ERRS}"
+              exit 1
+          fi
+
 
 # dependencies:
 #   override:
