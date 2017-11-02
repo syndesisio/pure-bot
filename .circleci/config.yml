@@ -88,6 +88,13 @@ jobs:
               exit 1
           fi
 
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
+
 
 # dependencies:
 #   override:
