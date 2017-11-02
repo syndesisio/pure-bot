@@ -38,7 +38,7 @@ var (
 	handlers = map[string][]Handler{
 		//"pull_request": {dismissReviewHandler},
 		"pull_request_review": {addLabelOnReviewApprovalHandler, autoMergeHandler},
-		"pull_request":        {autoMergeHandler},
+		"pull_request":        {autoMergeHandler, wipHandler},
 		"status":              {autoMergeHandler},
 	}
 )

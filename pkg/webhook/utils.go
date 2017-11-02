@@ -15,10 +15,12 @@
 package webhook
 
 import (
+	"context"
 	"strings"
 	"unicode"
 
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 )
 
 // Returns true if the `comments` slice contains `commentBody`, ignoring whitespace due
@@ -42,4 +44,73 @@ func stripSpaces(str string) string {
 		// Else keep it in the string.
 		return r
 	}, str)
+}
+
+func containsLabel(labels []github.Label, label string) bool {
+	for _, l := range labels {
+		if l.GetName() == label {
+			return true
+		}
+	}
+	return false
+}
+
+func labelsContainsLabel(labels []*github.Label, label string) bool {
+	for _, l := range labels {
+		if l.GetName() == label {
+			return true
+		}
+	}
+	return false
+}
+
+func prIsLabelledWithOneOfSpecifiedLabels(pr *github.PullRequest, specifiedLabels []string, repo *github.Repository, gh *github.Client) (bool, error) {
+	labels, _, err := gh.Issues.ListLabelsByIssue(
+		context.Background(),
+		repo.Owner.GetLogin(),
+		repo.GetName(),
+		pr.GetNumber(),
+		nil,
+	)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to list labels for PR %s", pr.GetHTMLURL())
+	}
+
+	for _, label := range specifiedLabels {
+		if labelsContainsLabel(labels, label) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+type commitStatus string
+
+var (
+	pendingStatus commitStatus = "pending"
+	successStatus commitStatus = "success"
+)
+
+func createContextWithSpecifiedStatus(contextName string, status commitStatus, description string, event *github.PullRequestEvent, gh *github.Client) error {
+	if _, _, err := gh.Repositories.CreateStatus(
+		context.Background(),
+		event.Repo.Owner.GetLogin(),
+		event.Repo.GetName(),
+		event.PullRequest.Head.GetSHA(),
+		&github.RepoStatus{
+			State:       (*string)(&status),
+			Context:     &contextName,
+			Description: &description,
+		},
+	); err != nil {
+		return errors.Wrapf(
+			err,
+			"failed to set PR %s context %s to status %s",
+			event.PullRequest.GetHTMLURL(),
+			contextName,
+			status,
+		)
+	}
+
+	return nil
 }
