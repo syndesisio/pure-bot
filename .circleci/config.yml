@@ -17,12 +17,12 @@ version: 2
 job_defaults: &job_defaults
   working_directory: /go/src/github.com/syndesisio/pure-bot
 
+  docker:
+  - image: golang:1.9.2
+
 jobs:
   checkout_code:
     <<: *job_defaults
-
-    docker:
-    - image: golang:1.9.2
 
     steps:
     - checkout
@@ -34,9 +34,6 @@ jobs:
 
   vendor_dependencies:
     <<: *job_defaults
-
-    docker:
-    - image: golang:1.9.2
 
     steps:
     - restore_cache:
@@ -57,9 +54,6 @@ jobs:
   build:
     <<: *job_defaults
 
-    docker:
-    - image: docker:17.09.0-ce-git
-
     steps:
     - restore_cache:
         keys:
@@ -69,25 +63,27 @@ jobs:
         keys:
         - vendor-{{ checksum "Gopkg.lock" }}
 
-    - setup_remote_docker:
-        version: 17.09.0-ce
-
     - run:
-        name: Build Docker image
+        name: Build binary
+
         command: |
+          ROOT_PKG=$(go list .)
           VERSION=$(git describe --match 'v[0-9]*' --dirty --always)
-          docker build \
-            --build-arg VERSION="${VERSION}" \
-            --build-arg BUILD_DATE="$(date -u)" \
-            --no-cache \
-            -f .circleci/Dockerfile \
-            -t syndesis/pure-bot:${VERSION} .
+          BUILD_DATE=$(date -u)
+
+          CGO_ENABLED=0 go build -v                                                                                                           \
+              -installsuffix "static"                                                                                           \
+              -ldflags "-X ${ROOT_PKG}/pkg/version.AppVersion=${VERSION} -X '${ROOT_PKG}/pkg/version.BuildDate=${BUILD_DATE}'"  \
+              -o pure-bot \
+              .
+
+    - persist_to_workspace:
+        root: .
+        paths:
+        - pure-bot
 
   test:
     <<: *job_defaults
-
-    docker:
-    - image: golang:1.9.2
 
     steps:
     - restore_cache:
