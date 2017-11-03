@@ -128,6 +128,30 @@ jobs:
                 exit 1
             fi
 
+  build_docker:
+    <<: *job_defaults
+
+    docker:
+    - image: docker:17.09.0-ce-git
+
+    steps:
+      - restore_cache:
+          keys:
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+
+      - setup_remote_docker:
+          version: 17.09.0-ce
+
+      - attach_workspace:
+          at: .
+
+      - run:
+          name: Build Docker image
+          command: |
+            docker build \
+              -f .circleci/Dockerfile \
+              -t syndesis/pure-bot:$(git describe --match 'v[0-9]*' --dirty --always) .
+
 workflows:
   version: 2
   build_and_test:
@@ -142,6 +166,10 @@ workflows:
     - test:
         requires:
         - vendor_dependencies
+    - build_docker:
+        requires:
+        - build
+        - test
 
 # dependencies:
 #   override:
