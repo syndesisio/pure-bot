@@ -12,119 +12,121 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: 2
-
 job_defaults: &job_defaults
   working_directory: /go/src/github.com/syndesisio/pure-bot
 
   docker:
   - image: golang:1.9.2
 
+  environment: &env_defaults
+  - CGO_ENABLED: "0"
+
+version: 2
+
 jobs:
   checkout_code:
     <<: *job_defaults
 
     steps:
-    - checkout
+      - checkout
 
-    - save_cache:
-        key: code-repo-{{ .Environment.CIRCLE_SHA1 }}
-        paths:
-        - /go/src/github.com/syndesisio/pure-bot
+      - save_cache:
+          key: code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+          - /go/src/github.com/syndesisio/pure-bot
 
   vendor_dependencies:
     <<: *job_defaults
 
     steps:
-    - restore_cache:
-        keys:
-        - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
 
-    - run:
-        name: Update dependencies
-        command: |
-          command -v dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
-          dep ensure -v
+      - run:
+          name: Update dependencies
+          command: |
+            command -v dep >/dev/null 2>&1 || go get github.com/golang/dep/cmd/dep
+            dep ensure -v
 
-    - save_cache:
-        key: vendor-{{ checksum "Gopkg.lock" }}
-        paths:
-        - /go/src/github.com/syndesisio/pure-bot/vendor
+      - save_cache:
+          key: vendor-{{ checksum "Gopkg.lock" }}
+          paths:
+          - /go/src/github.com/syndesisio/pure-bot/vendor
 
   build:
     <<: *job_defaults
 
     steps:
-    - restore_cache:
-        keys:
-        - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
 
-    - restore_cache:
-        keys:
-        - vendor-{{ checksum "Gopkg.lock" }}
+      - restore_cache:
+          keys:
+          - vendor-{{ checksum "Gopkg.lock" }}
 
-    - run:
-        name: Build binary
+      - run:
+          name: Build binary
 
-        command: |
-          ROOT_PKG=$(go list .)
-          VERSION=$(git describe --match 'v[0-9]*' --dirty --always)
-          BUILD_DATE=$(date -u)
+          command: |
+            ROOT_PKG=$(go list .)
+            VERSION=$(git describe --match 'v[0-9]*' --dirty --always)
+            BUILD_DATE=$(date -u)
 
-          CGO_ENABLED=0 go build -v                                                                                                           \
-              -installsuffix "static"                                                                                           \
-              -ldflags "-X ${ROOT_PKG}/pkg/version.AppVersion=${VERSION} -X '${ROOT_PKG}/pkg/version.BuildDate=${BUILD_DATE}'"  \
-              -o pure-bot \
-              .
+            go build -v                                                                                                           \
+                -installsuffix "static"                                                                                           \
+                -ldflags "-X ${ROOT_PKG}/pkg/version.AppVersion=${VERSION} -X '${ROOT_PKG}/pkg/version.BuildDate=${BUILD_DATE}'"  \
+                -o pure-bot \
+                .
 
-    - persist_to_workspace:
-        root: .
-        paths:
-        - pure-bot
+      - persist_to_workspace:
+          root: .
+          paths:
+          - pure-bot
 
   test:
     <<: *job_defaults
 
     steps:
-    - restore_cache:
-        keys:
-        - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+      - restore_cache:
+          keys:
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
 
-    - restore_cache:
-        keys:
-        - vendor-{{ checksum "Gopkg.lock" }}
+      - restore_cache:
+          keys:
+          - vendor-{{ checksum "Gopkg.lock" }}
 
-    - run:
-        name: Run tests
-        command: |
-          TARGETS=$(go list ./... | grep -v /vendor/)
-          CGO_ENABLED=0 GOOS=linux go test -i -installsuffix "static" ${TARGETS}
-          CGO_ENABLED=0 GOOS=linux go test -cover -installsuffix "static" ${TARGETS}
+      - run:
+          name: Run tests
+          command: |
+            TARGETS=$(go list ./... | grep -v /vendor/)
+            go test -v -cover -installsuffix "static" ${TARGETS}
 
-    - run:
-        name: Check gofmt
-        command: |
-          ERRS=$(find "$@" -type f ! -path '*/vendor/*' -name \*.go | xargs gofmt -l 2>&1 || true)
-          if [ -n "${ERRS}" ]; then
-              echo "The following files need to be gofmt'ed:"
-              echo
-              for e in ${ERRS}; do
-                  echo "    $e"
-              done
-              exit 1
-          fi
+      - run:
+          name: Check gofmt
+          command: |
+            ERRS=$(find "$@" -type f ! -path '*/vendor/*' -name \*.go | xargs gofmt -l 2>&1 || true)
+            if [ -n "${ERRS}" ]; then
+                echo "The following files need to be gofmt'ed:"
+                echo
+                for e in ${ERRS}; do
+                    echo "    $e"
+                done
+                exit 1
+            fi
 
-    - run:
-        name: Run go vet
-        command: |
-          TARGETS=$(go list ./... | grep -v /vendor/)
-          ERRS=$(go vet ${TARGETS} 2>&1 || true)
-          echo "There are go vet errors:"
-          echo
-          if [ -n "${ERRS}" ]; then
-              echo "${ERRS}"
-              exit 1
-          fi
+      - run:
+          name: Run go vet
+          command: |
+            TARGETS=$(go list ./... | grep -v /vendor/)
+            ERRS=$(go vet ${TARGETS} 2>&1 || true)
+            echo "There are go vet errors:"
+            echo
+            if [ -n "${ERRS}" ]; then
+                echo "${ERRS}"
+                exit 1
+            fi
 
 workflows:
   version: 2
