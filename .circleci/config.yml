@@ -85,6 +85,10 @@ jobs:
           paths:
           - pure-bot
 
+      - store_artifacts:
+          path: ./pure-bot
+          destination: binaries
+
   test:
     <<: *job_defaults
 
