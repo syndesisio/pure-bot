@@ -183,6 +183,29 @@ jobs:
       - attach_workspace:
           at: .
 
+      - run:
+          name: Push Docker image
+          command: |
+            if [ "${CIRCLE_PROJECT_USERNAME}" != "syndesisio" ]; then
+              echo "Skipping - this is not in origin repository"
+              exit 0
+            fi
+
+            if [ -z "${DOCKER_LOGIN}" ] || [ -z "${DOCKER_PASSWORD}" ]; then
+              echo "Missing Docker login information!!!"
+              exit 1
+            fi
+
+            docker load -q -i ./pure-bot-docker.tar
+
+            DOCKER_TAG=${CIRCLE_TAG:-latest}
+
+            docker tag syndesis/pure-bot:${CIRCLE_SHA1} syndesis/pure-bot:${DOCKER_TAG}
+
+            docker login -u ${DOCKER_LOGIN} -p ${DOCKER_PASSWORD}
+
+            docker push syndesis/pure-bot:${DOCKER_TAG}
+
 workflows:
   version: 2
   build_and_deploy:
