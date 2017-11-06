@@ -210,7 +210,7 @@ jobs:
     <<: *job_defaults
 
     docker:
-    - image: openshift/origin:v3.7.0-rc.0
+    - image: openshift/origin:v3.6.1
 
     steps:
       - run:
