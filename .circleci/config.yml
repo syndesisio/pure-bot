@@ -87,7 +87,7 @@ jobs:
 
       - store_artifacts:
           path: ./pure-bot
-          destination: binaries
+          destination: pure-bot
 
   test:
     <<: *job_defaults
@@ -154,11 +154,38 @@ jobs:
           command: |
             docker build \
               -f .circleci/Dockerfile \
-              -t syndesis/pure-bot:$(git describe --match 'v[0-9]*' --dirty --always) .
+              -t syndesis/pure-bot:${CIRCLE_SHA1} .
+
+      - run:
+          name: Export Docker image
+          command: |
+            docker save -o ./pure-bot-docker.tar syndesis/pure-bot:${CIRCLE_SHA1}
+
+      - persist_to_workspace:
+          root: .
+          paths:
+          - pure-bot-docker.tar
+
+      - store_artifacts:
+          path: ./pure-bot-docker.tar
+          destination: pure-bot-docker.tar
+
+  push_docker:
+    <<: *job_defaults
+
+    docker:
+    - image: docker:17.09.0-ce-git
+
+    steps:
+      - setup_remote_docker:
+          version: 17.09.0-ce
+
+      - attach_workspace:
+          at: .
 
 workflows:
   version: 2
-  build_and_test:
+  build_and_deploy:
     jobs:
     - checkout_code
     - vendor_dependencies:
@@ -174,6 +201,15 @@ workflows:
         requires:
         - build
         - test
+    - push_docker:
+        requires:
+        - build_docker
+        filters:
+          branches:
+            only: master
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
 
 # dependencies:
 #   override:
