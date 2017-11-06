@@ -206,6 +206,42 @@ jobs:
 
             docker push syndesis/pure-bot:${DOCKER_TAG}
 
+  openshift_deploy:
+    <<: *job_defaults
+
+    docker:
+    - image: openshift/origin:v3.7.0-rc.0
+
+    steps:
+      - run:
+          name: Check prerequisites
+          command: |
+            if [ "${CIRCLE_PROJECT_USERNAME}" != "syndesisio" ] || [ -z "${CIRCLE_TAG}"]; then
+              echo "This should only run for tags in origin repository"
+              exit 1
+            fi
+
+            if [ -z "${OPENSHIFT_SERVER}"] || [ -z "${OPENSHIFT_PROJECT}"] || [ -z "${OPENSHIFT_TOKEN}"]; then
+              echo "Missing OpenShift login environment variables"
+              exit 1
+            fi
+
+      - run:
+          name: OpenShift login
+          command: cli login ${OPENSHIFT_SERVER} --token=${OPENSHIFT_TOKEN}
+
+      - run:
+          name: Change OpenShift project
+          command: cli project ${OPENSHIFT_PROJECT}
+
+      - run:
+          name: Tag OpenShift image stream
+          command: cli tag --source=docker syndesis/pure-bot:${CIRCLE_TAG} pure-bot:deploy
+
+      - run:
+          name: Import latest image to OpenShift image stream
+          command: cli import-image pure-bot:deploy
+
 workflows:
   version: 2
   build_and_deploy:
@@ -233,19 +269,12 @@ workflows:
           tags:
             only:
               /v[0-9]+(\.[0-9]+)*/
-
-# dependencies:
-#   override:
-#   - make build
-
-# test:
-#   override:
-#   - make test
-
-# deployment:
-#   hub_tag:
-#     tag: /v[0-9]+(\.[0-9]+)*/
-#     owner: syndesisio
-#     commands:
-#       - docker login -e ${DOCKER_EMAIL} -u ${DOCKER_LOGIN} -p ${DOCKER_PASSWORD}
-#       - make VERSION=${CIRCLE_TAG} circleci-deploy
+    - openshift_deploy:
+        requires:
+        - push_docker
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
