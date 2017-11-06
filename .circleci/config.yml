@@ -246,20 +246,40 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-    - checkout_code
+    - checkout_code:
+        filters:
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
     - vendor_dependencies:
         requires:
         - checkout_code
+        filters:
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
     - build:
         requires:
         - vendor_dependencies
+        filters:
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
     - test:
         requires:
         - vendor_dependencies
+        filters:
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
     - build_docker:
         requires:
         - build
         - test
+        filters:
+          tags:
+            only:
+              /v[0-9]+(\.[0-9]+)*/
     - push_docker:
         requires:
         - build_docker
