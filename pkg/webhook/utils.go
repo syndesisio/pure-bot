@@ -48,7 +48,7 @@ func stripSpaces(str string) string {
 
 func containsLabel(labels []github.Label, label string) bool {
 	for _, l := range labels {
-		if l.GetName() == label {
+		if strings.EqualFold(l.GetName(), label) {
 			return true
 		}
 	}
@@ -57,7 +57,7 @@ func containsLabel(labels []github.Label, label string) bool {
 
 func labelsContainsLabel(labels []*github.Label, label string) bool {
 	for _, l := range labels {
-		if l.GetName() == label {
+		if strings.EqualFold(l.GetName(), label) {
 			return true
 		}
 	}
