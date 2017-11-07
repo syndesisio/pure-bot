@@ -12,7 +12,7 @@ payload = {
   iat: Time.now.to_i,
   # JWT expiration time (10 minute maximum)
   exp: 10.minutes.from_now.to_i,
-  # Integration's GitHub identifier
+  # Apps's GitHub identifier
   iss: 1949
 }
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integrations
+package apps
 
 import (
 	"net/http"
@@ -24,8 +24,8 @@ import (
 // Shared transport to reuse TCP connections.
 var tr = &http.Transport{}
 
-func Client(integrationID, installationID int, privateKey []byte) (*github.Client, error) {
-	itr, err := NewTransport(tr, integrationID, installationID, privateKey)
+func Client(appID, installationID int, privateKey []byte) (*github.Client, error) {
+	itr, err := NewTransport(tr, appID, installationID, privateKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create transport from private key file")
 	}
