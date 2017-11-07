@@ -19,20 +19,21 @@ $ pure-bot help run
 Runs pure-bot.
 
 Usage:
-pure-bot run [flags]
+  pure-bot run [flags]
 
 Flags:
-    --bind-address string                     Address to bind to
-    --bind-port int                           Port to bind to (default 8080)
-    --github-integration-id int               GitHub integration ID
-    --github-integration-private-key string   GitHub integration private key file
-    --tls-cert string                         TLS cert file
-    --tls-key string                          TLS key file
-    --webhook-secret string                   Secret to validate incoming webhooks
+      --bind-address string             Address to bind to
+      --bind-port int                   Port to bind to (default 8080)
+      --github-app-id int               GitHub App ID
+      --github-app-private-key string   GitHub app private key file
+  -h, --help                            help for run
+      --tls-cert string                 TLS cert file
+      --tls-key string                  TLS key file
+      --webhook-secret string           Secret to validate incoming webhooks
 
 Global Flags:
-    --config string     config file (default is $HOME/.pure-bot.yaml)
-    --log-level Level   log level (default info)
+      --config string     config file (default is $HOME/.pure-bot.yaml)
+      --log-level Level   log level (default info)
 ```
 
 ## Building

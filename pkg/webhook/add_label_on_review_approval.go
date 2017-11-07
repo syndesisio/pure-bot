@@ -33,7 +33,7 @@ const (
 
 type addLabelOnReviewApproval struct{}
 
-func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubIntegrationsClientFunc) error {
+func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc) error {
 	event, ok := eventObject.(*github.PullRequestReviewEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")

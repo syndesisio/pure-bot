@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package integrations
+package apps
 
 import (
 	"crypto/rsa"
@@ -30,21 +30,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-const integrationsAcceptHeader = "application/vnd.github.machine-man-preview+json"
+const appsAcceptHeader = "application/vnd.github.machine-man-preview+json"
 
 var apiBaseURL = strings.TrimSuffix(github.NewClient(http.DefaultClient).BaseURL.String(), "/")
 
 // Transport provides a http.RoundTripper by wrapping an existing
-// http.RoundTripper and provides GitHub Integration authentication as an
+// http.RoundTripper and provides GitHub App authentication as an
 // installation.
 //
-// See https://developer.github.com/early-access/integrations/authentication/#as-an-installation
+// See https://developer.github.com/apps/building-integrations/setting-up-and-registering-github-apps/about-authentication-options-for-github-apps/#authenticating-as-an-installation
 type Transport struct {
 	BaseURL        string            // baseURL is the scheme and host for GitHub API, defaults to https://api.github.com
 	tr             http.RoundTripper // tr is the underlying roundtripper being wrapped
-	key            *rsa.PrivateKey   // key is the GitHub Integration's private key
-	integrationID  int               // integrationID is the GitHub Integration's Installation ID
-	installationID int               // installationID is the GitHub Integration's Installation ID
+	key            *rsa.PrivateKey   // key is the GitHub Apps's private key
+	appID          int               // appID is the GitHub App's ID
+	installationID int               // installationID is the GitHub Apps's Installation ID
 
 	mu    *sync.Mutex  // mu protects token
 	token *accessToken // token is the installation's access token
@@ -59,12 +59,12 @@ type accessToken struct {
 var _ http.RoundTripper = &Transport{}
 
 // NewTransportFromKeyFile returns an Transport using a private key from file.
-func NewTransportFromKeyFile(tr http.RoundTripper, integrationID, installationID int, privateKeyFile string) (*Transport, error) {
+func NewTransportFromKeyFile(tr http.RoundTripper, appID, installationID int, privateKeyFile string) (*Transport, error) {
 	privateKey, err := ioutil.ReadFile(privateKeyFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read private key")
 	}
-	return NewTransport(tr, integrationID, installationID, privateKey)
+	return NewTransport(tr, appID, installationID, privateKey)
 }
 
 // NewTransport returns an Transport using private key. The key is parsed
@@ -74,10 +74,10 @@ func NewTransportFromKeyFile(tr http.RoundTripper, integrationID, installationID
 // installations to ensure reuse of underlying TCP connections.
 //
 // The returned Transport is safe to be used concurrently.
-func NewTransport(tr http.RoundTripper, integrationID, installationID int, privateKey []byte) (*Transport, error) {
+func NewTransport(tr http.RoundTripper, appID, installationID int, privateKey []byte) (*Transport, error) {
 	t := &Transport{
 		tr:             tr,
-		integrationID:  integrationID,
+		appID:          appID,
 		installationID: installationID,
 		BaseURL:        apiBaseURL,
 		mu:             &sync.Mutex{},
@@ -112,7 +112,7 @@ func (t *Transport) refreshToken() error {
 	claims := &jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Minute).Unix(),
-		Issuer:    strconv.Itoa(t.integrationID),
+		Issuer:    strconv.Itoa(t.appID),
 	}
 	bearer := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
@@ -126,7 +126,7 @@ func (t *Transport) refreshToken() error {
 		return errors.Wrap(err, "could not create request")
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", ss))
-	req.Header.Set("Accept", integrationsAcceptHeader)
+	req.Header.Set("Accept", appsAcceptHeader)
 
 	client := &http.Client{Transport: t.tr}
 	resp, err := client.Do(req)

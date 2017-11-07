@@ -24,14 +24,14 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/syndesisio/pure-bot/pkg/config"
-	"github.com/syndesisio/pure-bot/pkg/github/integrations"
+	"github.com/syndesisio/pure-bot/pkg/github/apps"
 	"go.uber.org/zap"
 )
 
-type GitHubIntegrationsClientFunc func(installationID int) (*github.Client, error)
+type GitHubAppsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubIntegrationsClientFunc) error
+	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubAppsClientFunc) error
 }
 
 var (
@@ -43,21 +43,21 @@ var (
 	}
 )
 
-func newGitHubClientFunc(integrationID int, privateKeyFile string) (GitHubIntegrationsClientFunc, error) {
+func newGitHubClientFunc(appID int, privateKeyFile string) (GitHubAppsClientFunc, error) {
 	key, err := ioutil.ReadFile(privateKeyFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read private key file")
 	}
 
 	return func(installationID int) (*github.Client, error) {
-		return integrations.Client(integrationID, installationID, key)
+		return apps.Client(appID, installationID, key)
 	}, nil
 }
 
-func NewHTTPHandler(cfg config.WebhookConfig, integrationCfg config.GitHubIntegrationConfig, logger *zap.Logger) (http.HandlerFunc, error) {
-	newGHClientF, err := newGitHubClientFunc(integrationCfg.IntegrationID, integrationCfg.PrivateKeyFile)
+func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, logger *zap.Logger) (http.HandlerFunc, error) {
+	newGHClientF, err := newGitHubClientFunc(appCfg.AppID, appCfg.PrivateKeyFile)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create integrations client func")
+		return nil, errors.Wrap(err, "failed to create apps client func")
 	}
 	webhookSecret := ([]byte)(cfg.Secret)
 	return func(w http.ResponseWriter, r *http.Request) {

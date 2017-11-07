@@ -35,7 +35,7 @@ var runCmd = &cobra.Command{
 	Short: "Runs pure-bot",
 	Long:  `Runs pure-bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig.GitHubIntegration, logger.Named("webhook"))
+		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig.GitHubApp, logger.Named("webhook"))
 		if err != nil {
 			logger.Fatal("failed to create webhook handler", zap.Error(err))
 		}
@@ -76,8 +76,8 @@ func init() {
 	v.BindPFlag("http.tlsCert", runCmd.Flags().Lookup("tls-cert"))
 	runCmd.Flags().String("tls-key", "", "TLS key file")
 	v.BindPFlag("http.tlsKey", runCmd.Flags().Lookup("tls-key"))
-	runCmd.Flags().Int("github-integration-id", 0, "GitHub integration ID")
-	v.BindPFlag("github.integrationId", runCmd.Flags().Lookup("github-integration-id"))
-	runCmd.Flags().String("github-integration-private-key", "", "GitHub integration private key file")
-	v.BindPFlag("github.privateKey", runCmd.Flags().Lookup("github-integration-private-key"))
+	runCmd.Flags().Int("github-app-id", 0, "GitHub App ID")
+	v.BindPFlag("github.appId", runCmd.Flags().Lookup("github-app-id"))
+	runCmd.Flags().String("github-app-private-key", "", "GitHub app private key file")
+	v.BindPFlag("github.privateKey", runCmd.Flags().Lookup("github-app-private-key"))
 }
