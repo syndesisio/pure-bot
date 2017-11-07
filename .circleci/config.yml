@@ -31,7 +31,7 @@ jobs:
       - checkout
 
       - save_cache:
-          key: code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          key: code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
           - /go/src/github.com/syndesisio/pure-bot
 
@@ -41,7 +41,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
 
       - run:
           name: Update dependencies
@@ -60,7 +60,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
 
       - restore_cache:
           keys:
@@ -95,7 +95,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
 
       - restore_cache:
           keys:
@@ -141,7 +141,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-          - code-repo-{{ .Environment.CIRCLE_SHA1 }}
+          - code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
 
       - setup_remote_docker:
           version: 17.09.0-ce
