@@ -78,5 +78,5 @@ func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClie
 
 func (h *wip) actionTypeRequiresHandling(action string) bool {
 	a := strings.ToLower(action)
-	return a == "opened" || a == "reopened" || a == "labeled" || a == "unlabeled" || a == "edited"
+	return a == "opened" || a == "reopened" || a == "labeled" || a == "unlabeled" || a == "edited" || a == "synchronize"
 }
