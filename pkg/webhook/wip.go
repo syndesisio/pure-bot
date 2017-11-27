@@ -24,10 +24,11 @@ import (
 )
 
 const (
-	wipLabel        = "wip"
-	doNotMergeLabel = "do not merge"
+	wipLabel          = "wip"
+	doNotMergeLabel   = "do not merge"
+	labelStatusPrefix = "status/"
 
-	wipContext = "wip"
+	wipContext = "pure-bot/wip"
 )
 
 var (
@@ -65,7 +66,7 @@ func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClie
 		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - titled as work in progress", event, gh)
 	}
 
-	labelledAsWIP, err := prIsLabelledWithOneOfSpecifiedLabels(event.PullRequest, []string{wipLabel, doNotMergeLabel}, event.Repo, gh)
+	labelledAsWIP, err := prIsLabelledWithOneOfSpecifiedLabels(event.PullRequest, []string{wipLabel, doNotMergeLabel, labelStatusPrefix + wipLabel}, event.Repo, gh)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check for WIP labels on PR %s", event.PullRequest.GetHTMLURL())
 	}
