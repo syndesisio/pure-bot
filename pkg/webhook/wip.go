@@ -74,6 +74,14 @@ func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClie
 		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - labelled as work in progress", event, gh)
 	}
 
+	prNeedsReview, err := doesPRNeedReview(event.PullRequest, event.Repo, gh)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check for review status on PR %s", event.PullRequest.GetHTMLURL())
+	}
+	if prNeedsReview {
+		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - requested review not yet completed", event, gh)
+	}
+
 	return createContextWithSpecifiedStatus(wipContext, successStatus, "Ready to merge - this is not a work in progress", event, gh)
 }
 

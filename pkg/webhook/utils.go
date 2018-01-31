@@ -64,6 +64,58 @@ func labelsContainsLabel(labels []*github.Label, label string) bool {
 	return false
 }
 
+func doesPRNeedReview(pr *github.PullRequest, repo *github.Repository, gh *github.Client) (bool, error) {
+	reviewers, _, err := gh.PullRequests.ListReviewers(
+		context.Background(),
+		repo.Owner.GetLogin(),
+		repo.GetName(),
+		pr.GetNumber(),
+		nil,
+	)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to list reviewers for PR %s", pr.GetHTMLURL())
+	}
+
+	reviews, _, err := gh.PullRequests.ListReviews(
+		context.Background(),
+		repo.Owner.GetLogin(),
+		repo.GetName(),
+		pr.GetNumber(),
+		nil,
+	)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to list reviews for PR %s", pr.GetHTMLURL())
+	}
+
+	// No review requested..
+	if len(reviewers.Users) == 0 && len(reviewers.Teams) == 0 {
+		return false, nil
+	}
+
+	reviewerIds := make(map[int]bool)
+	for _, u := range reviewers.Users {
+		if u.ID != nil {
+			reviewerIds[*u.ID] = true
+		}
+	}
+	for _, t := range reviewers.Teams {
+		if t.ID != nil {
+			reviewerIds[*t.ID] = true
+		}
+	}
+	for _, r := range reviews {
+		if r.User.ID != nil && r.State != nil && *r.State == "APPROVED" {
+			if _, ok := reviewerIds[*r.User.ID]; ok {
+				// One of our requested reviewers approved.
+				return false, nil
+			}
+		}
+	}
+
+	// Still waiting for a requested reviewer to approve.
+	return true, nil
+}
+
 func prIsLabelledWithOneOfSpecifiedLabels(pr *github.PullRequest, specifiedLabels []string, repo *github.Repository, gh *github.Client) (bool, error) {
 	labels, _, err := gh.Issues.ListLabelsByIssue(
 		context.Background(),
