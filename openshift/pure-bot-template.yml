@@ -1,0 +1,142 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: pure-bot
+parameters:
+- name: ROUTE_HOSTNAME
+  description: The external hostname to access pure-bot for delivering webhooks
+  required: true
+- name: APP_ID
+  description: The GitHub AppId. Get this from the settings of your GitHub App
+  required: true
+- name: WEBHOOK_SECRET
+  description: The custom secret used to authenticate the WebHook. Also from the GitHub App setting page.
+  required: true
+- name: PRIVATE_KEY
+  description: Private key for fetching access tokens.
+  required: true
+- name: VERSION
+  description: Version to use. "latest" by default
+  value: latest
+  required: true
+message: |
+  PuRe Bot installed
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: pure-bot-config
+  data:
+    config.yml: |
+      webhook:
+        secret: ${WEBHOOK_SECRET}
+      github:
+        appId: ${APP_ID}
+        privateKey: /secrets/private-key
+        newIssueLabels:
+        - notify/triage
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: pure-bot-private-key
+  stringData:
+    private-key: ${PRIVATE_KEY}
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: pure-bot
+    name: pure-bot
+  spec:
+    host: ${ROUTE_HOSTNAME}
+    port:
+      targetPort: 8080
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    to:
+      kind: Service
+      name: pure-bot
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: pure-bot
+    name: pure-bot
+  spec:
+    ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: pure-bot
+      deploymentconfig: pure-bot
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: pure-bot
+    labels:
+      app: pure-bot
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: syndesis/pure-bot:${VERSION}
+      importPolicy:
+        scheduled: true
+      name: ${VERSION}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: pure-bot
+    name: pure-bot
+  spec:
+    replicas: 1
+    selector:
+      app: pure-bot
+    template:
+      metadata:
+        labels:
+          app: pure-bot
+      spec:
+        containers:
+        - args:
+          - run
+          - --config=/config/config.yml
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          name: pure-bot
+          volumeMounts:
+          - mountPath: /config
+            name: config
+            readOnly: true
+          - mountPath: /secrets
+            name: private-key
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: private-key
+          secret:
+            defaultMode: 420
+            secretName: pure-bot-private-key
+        - configMap:
+            defaultMode: 420
+            name: pure-bot-config
+          name: config
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - pure-bot
+        from:
+          kind: ImageStreamTag
+          name: pure-bot:${VERSION}
+      type: ImageChange

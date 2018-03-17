@@ -43,6 +43,7 @@ type WebhookConfig struct {
 }
 
 type GitHubAppConfig struct {
-	AppID          int    `mapstructure:"appId"`
-	PrivateKeyFile string `mapstructure:"privateKey"`
+	AppID          int      `mapstructure:"appId"`
+	PrivateKeyFile string   `mapstructure:"privateKey"`
+	NewIssueLabels []string `mapstructure:"newIssueLabels"`
 }

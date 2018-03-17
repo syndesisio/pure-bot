@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"github.com/syndesisio/pure-bot/pkg/config"
 )
 
 var addLabelOnReviewApprovalHandler Handler = &addLabelOnReviewApproval{}
@@ -33,7 +34,7 @@ const (
 
 type addLabelOnReviewApproval struct{}
 
-func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc) error {
+func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
 	event, ok := eventObject.(*github.PullRequestReviewEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")

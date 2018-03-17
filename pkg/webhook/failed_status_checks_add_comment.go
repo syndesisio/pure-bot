@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/multierr"
 )
 
@@ -31,7 +32,7 @@ var (
 
 type failedStatusCheckAddComment struct{}
 
-func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc) error {
+func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
 	event, ok := eventObject.(*github.StatusEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")

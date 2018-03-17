@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/coreos/etcd/pkg/osutil"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"github.com/syndesisio/pure-bot/pkg/version"
 )
@@ -42,7 +43,11 @@ var RootCmd = &cobra.Command{
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		logger.Fatal("Command failed", zap.Error(err))
+		if logger != nil {
+			logger.Fatal("Command failed", zap.Error(err))
+		} else {
+			osutil.Exit(1)
+		}
 	}
 }
 
