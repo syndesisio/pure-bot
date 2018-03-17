@@ -24,6 +24,7 @@ import (
 
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"github.com/syndesisio/pure-bot/pkg/version"
+	"github.com/coreos/etcd/pkg/osutil"
 )
 
 var (
@@ -42,7 +43,11 @@ var RootCmd = &cobra.Command{
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		logger.Fatal("Command failed", zap.Error(err))
+		if logger != nil {
+			logger.Fatal("Command failed", zap.Error(err))
+		} else {
+			osutil.Exit(1)
+		}
 	}
 }
 

@@ -31,7 +31,7 @@ import (
 type GitHubAppsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubAppsClientFunc) error
+	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubAppsClientFunc, config config.GitHubAppConfig) error
 }
 
 var (
@@ -40,6 +40,7 @@ var (
 		"pull_request_review": {addLabelOnReviewApprovalHandler, autoMergeHandler},
 		"pull_request":        {autoMergeHandler, wipHandler},
 		"status":              {autoMergeHandler},
+		"issues":              {labelNewIssueHandler},
 	}
 )
 
@@ -73,7 +74,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 		} else {
 			pl, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				logger.Error("failed to read paylad", zap.Error(err))
+				logger.Error("failed to read payload", zap.Error(err))
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -82,7 +83,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 		messageType := github.WebHookType(r)
 		event, err := github.ParseWebHook(messageType, payload)
 		for _, wh := range handlers[messageType] {
-			err = multierr.Combine(err, wh.HandleEvent(w, event, newGHClientF))
+			err = multierr.Combine(err, wh.HandleEvent(w, event, newGHClientF, appCfg))
 		}
 		if err != nil {
 			logger.Error("webhook handler failed", zap.String("error", fmt.Sprintf("%+v", err)))

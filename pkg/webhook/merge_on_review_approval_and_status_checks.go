@@ -23,6 +23,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
+	"github.com/syndesisio/pure-bot/pkg/config"
 )
 
 var autoMergeHandler Handler = &autoMerger{}
@@ -34,7 +35,7 @@ const (
 
 type autoMerger struct{}
 
-func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc) error {
+func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
 	switch event := eventObject.(type) {
 	case *github.PullRequestEvent:
 		return h.handlePullRequestEvent(w, event, ghClientFunc)

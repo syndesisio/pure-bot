@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"github.com/syndesisio/pure-bot/pkg/config"
 )
 
 const (
@@ -39,7 +40,7 @@ var (
 
 type wip struct{}
 
-func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc) error {
+func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
 	event, ok := eventObject.(*github.PullRequestEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
