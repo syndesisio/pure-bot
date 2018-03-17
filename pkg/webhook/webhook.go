@@ -39,7 +39,7 @@ var (
 		//"pull_request": {dismissReviewHandler},
 		"pull_request_review": {addLabelOnReviewApprovalHandler, autoMergeHandler},
 		"pull_request":        {autoMergeHandler, wipHandler},
-		"status":              {autoMergeHandler},
+		"status":              {autoMergeHandler, removeCommentsForFixedChecksHandler},
 		"issues":              {labelNewIssueHandler},
 	}
 )
