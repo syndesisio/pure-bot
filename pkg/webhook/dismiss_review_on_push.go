@@ -21,8 +21,8 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
 	"github.com/syndesisio/pure-bot/pkg/config"
+	"go.uber.org/multierr"
 )
 
 var (

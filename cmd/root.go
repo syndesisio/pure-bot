@@ -22,9 +22,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/coreos/etcd/pkg/osutil"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"github.com/syndesisio/pure-bot/pkg/version"
-	"github.com/coreos/etcd/pkg/osutil"
 )
 
 var (
