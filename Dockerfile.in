@@ -14,7 +14,7 @@
 
 FROM ARG_FROM
 
-MAINTAINER Jimmi Dyson <jimmidyson@gmail.com>
+MAINTAINER Syndesis Developers <dev@syndesis.io>
 
 RUN apk --no-cache add ca-certificates
 

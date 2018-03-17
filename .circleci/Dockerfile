@@ -1,5 +1,5 @@
 FROM alpine:3.6
-LABEL maintainer="rhuss@redhat.com"
+LABEL maintainer="dev@syndesis.io"
 EXPOSE 8080
 RUN apk --no-cache add ca-certificates
 WORKDIR /
