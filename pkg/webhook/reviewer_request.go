@@ -57,7 +57,7 @@ func (h *reviewerRequest) checkLabel(event *github.PullRequestEvent, gh *github.
 	}
 }
 
-func handleReviewRequested(event *github.PullRequestEvent, pr *github.PullRequest, gh *github.Client, label string,  logger *zap.Logger) error {
+func handleReviewRequested(event *github.PullRequestEvent, pr *github.PullRequest, gh *github.Client, label string, logger *zap.Logger) error {
 
 	logger.Debug("Handling reviewer assignment", zap.Int64("user", *event.RequestedReviewer.ID))
 	if hasLabel(pr, label) {
@@ -67,11 +67,10 @@ func handleReviewRequested(event *github.PullRequestEvent, pr *github.PullReques
 	return addLabel(event, gh, label, logger)
 }
 
-
 func handleReviewRequestRemoved(event *github.PullRequestEvent, pr *github.PullRequest, gh *github.Client, label string, logger *zap.Logger) error {
 	logger.Debug("Handling reviewer unassignment", zap.Int64("user", *event.RequestedReviewer.ID))
 
-	if ! hasLabel(pr, label) {
+	if !hasLabel(pr, label) {
 		logger.Debug("No label assignment, so nothing to remove")
 		return nil
 	}
@@ -92,7 +91,7 @@ func handleReviewRequestRemoved(event *github.PullRequestEvent, pr *github.PullR
 
 func updateReviewStatus(pr *github.PullRequest, repo *github.Repository, gh *github.Client, label string, logger *zap.Logger) error {
 
-	if !hasLabel(pr,label)  {
+	if !hasLabel(pr, label) {
 		logger.Debug("No review requested", zap.Bool("pass", true))
 		return createContextWithSpecifiedStatus(prReviewContext, successStatus, "OK - No review requested", repo, pr, gh)
 	}
@@ -145,7 +144,7 @@ func hasLabel(pr *github.PullRequest, label string) bool {
 	return false
 }
 
-func listReviews(pr *github.PullRequest, repo *github.Repository, gh *github.Client) ([]*github.PullRequestReview, error)  {
+func listReviews(pr *github.PullRequest, repo *github.Repository, gh *github.Client) ([]*github.PullRequestReview, error) {
 	reviews, _, err := gh.PullRequests.ListReviews(
 		context.Background(),
 		repo.Owner.GetLogin(),
@@ -179,7 +178,6 @@ func listReviewers(pr *github.PullRequest, repo *github.Repository, gh *github.C
 	return users, nil
 }
 
-
 func hasReviewersRequestedOrAlreadyReviews(event *github.PullRequestEvent, gh *github.Client) (bool, error) {
 	reviews, err := listReviews(event.PullRequest, event.Repo, gh)
 	if err != nil {
@@ -199,6 +197,3 @@ func fetchPullRequest(event *github.PullRequestEvent, gh *github.Client) (*githu
 	pr, _, err := gh.PullRequests.Get(context.Background(), owner, repo, prNumber)
 	return pr, err
 }
-
-
-

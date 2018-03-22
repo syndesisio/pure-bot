@@ -85,7 +85,7 @@ func printVersion() {
 func initConfig() {
 	v.SetConfigName(".pure-bot") // name of config file (without extension)
 	v.AddConfigPath("$HOME")     // adding home directory as first search path
-	if cfgFile != "" { // enable ability to specify config file via flag
+	if cfgFile != "" {           // enable ability to specify config file via flag
 		v.SetConfigFile(cfgFile)
 	}
 

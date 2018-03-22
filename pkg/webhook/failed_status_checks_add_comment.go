@@ -32,7 +32,6 @@ func (h *failedStatusCheckAddComment) EventTypesHandled() []string {
 	return []string{"status"}
 }
 
-
 func (h *failedStatusCheckAddComment) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.StatusEvent)
 	if !ok {

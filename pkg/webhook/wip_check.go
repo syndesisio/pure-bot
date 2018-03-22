@@ -71,7 +71,6 @@ func (h *wip) HandleEvent(eventObject interface{}, gh *github.Client, config con
 	return createContextWithSpecifiedStatus(wipContext, successStatus, "OK - this is not a work in progress", event.Repo, event.PullRequest, gh)
 }
 
-
 func (h *wip) actionTypeRequiresHandling(action string) bool {
 	a := strings.ToLower(action)
 	return a == "opened" || a == "reopened" || a == "labeled" || a == "unlabeled" || a == "edited" || a == "synchronize"

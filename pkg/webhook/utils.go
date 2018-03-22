@@ -64,7 +64,6 @@ func labelsContainsLabel(labels []*github.Label, label string) bool {
 	return false
 }
 
-
 func prIsLabelledWithOneOfSpecifiedLabels(pr *github.PullRequest, specifiedLabels []string, repo *github.Repository, gh *github.Client) (bool, error) {
 	labels, _, err := gh.Issues.ListLabelsByIssue(
 		context.Background(),

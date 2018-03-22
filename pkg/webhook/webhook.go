@@ -115,7 +115,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 		}
 
 		messageType := github.WebHookType(r)
-		event, err := github.ParseWebHook(messageType, payload);
+		event, err := github.ParseWebHook(messageType, payload)
 		if err != nil {
 			logger.Error("failed to parse webhook", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
