@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	approvedLabel  = "approved"
-	assignedAction = "approved"
+	approvedLabel       = "approved"
+	approvedReviewState = "approved"
 )
 
 type addLabelOnReviewApproval struct{}
@@ -42,7 +42,7 @@ func (h *addLabelOnReviewApproval) HandleEvent(eventObject interface{}, gh *gith
 		return errors.New("wrong event eventObject type")
 	}
 
-	if strings.ToLower(event.Review.GetState()) != assignedAction {
+	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
 		return nil
 	}
 

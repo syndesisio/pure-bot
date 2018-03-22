@@ -52,7 +52,7 @@ func (h *autoMerger) HandleEvent(eventObject interface{}, gh *github.Client, con
 }
 
 func (h *autoMerger) handlePullRequestReviewEvent(event *github.PullRequestReviewEvent, gh *github.Client) error {
-	if strings.ToLower(event.Review.GetState()) != assignedAction {
+	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
 		return nil
 	}
 
