@@ -17,29 +17,26 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/multierr"
-)
-
-var (
-	failedStatusCheckAddCommentHandler Handler = &failedStatusCheckAddComment{}
+	"go.uber.org/zap"
 )
 
 type failedStatusCheckAddComment struct{}
 
-func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
+func (h *failedStatusCheckAddComment) EventTypesHandled() []string {
+	return []string{"status"}
+}
+
+
+func (h *failedStatusCheckAddComment) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.StatusEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
-	}
-
-	if event.Installation == nil {
-		return nil
 	}
 
 	state := strings.ToLower(event.GetState())
@@ -51,11 +48,6 @@ func (h *failedStatusCheckAddComment) HandleEvent(w http.ResponseWriter, eventOb
 	statusContext := event.GetContext()
 	if strings.HasPrefix(statusContext, "codecov/") || strings.HasPrefix(statusContext, "codacy/") {
 		return nil
-	}
-
-	gh, err := ghClientFunc(event.Installation.GetID())
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
 	commitSHA := event.GetSHA()

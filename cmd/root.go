@@ -31,6 +31,7 @@ var (
 	cfgFile   string
 	logLevel  = zapcore.InfoLevel
 	logger    *zap.Logger
+	debug     bool
 	botConfig = config.NewWithDefaults()
 	v         = viper.New()
 )
@@ -54,6 +55,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initLogging, printVersion, initConfig)
 
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "switch on debugging")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pure-bot.yaml)")
 	RootCmd.PersistentFlags().AddGoFlag(&flag.Flag{
 		Name:     "log-level",
@@ -64,21 +66,26 @@ func init() {
 }
 
 func initLogging() {
-	logConfig := zap.NewProductionConfig()
-	logConfig.Level.SetLevel(logLevel)
-	logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	var logConfig zap.Config
+	if debug {
+		logConfig = zap.NewDevelopmentConfig()
+	} else {
+		logConfig = zap.NewProductionConfig()
+		logConfig.Level.SetLevel(logLevel)
+		logConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	}
 	logger, _ = logConfig.Build()
 }
 
 func printVersion() {
-	logger.Info("Build info", zap.String("version", version.AppVersion))
+	logger.Info("Build info", zap.String("version", version.AppVersion), zap.String("build", version.BuildDate))
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	v.SetConfigName(".pure-bot") // name of config file (without extension)
 	v.AddConfigPath("$HOME")     // adding home directory as first search path
-	if cfgFile != "" {           // enable ability to specify config file via flag
+	if cfgFile != "" { // enable ability to specify config file via flag
 		v.SetConfigFile(cfgFile)
 	}
 
@@ -98,7 +105,7 @@ func initConfig() {
 		logger.Info("Using config file", zap.String("file", v.ConfigFileUsed()))
 	}
 
-	if err := v.UnmarshalExact(&botConfig); err != nil {
+	if err := v.Unmarshal(&botConfig); err != nil {
 		logger.Fatal("Failed to unmarshal config file", zap.Error(err))
 	}
 

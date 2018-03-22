@@ -15,13 +15,13 @@
 package webhook
 
 import (
-	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
+	"go.uber.org/zap"
 )
 
 const (
@@ -32,22 +32,19 @@ const (
 	wipContext = "pure-bot/wip"
 )
 
-var (
-	wipHandler Handler = &wip{}
-
-	wipRE = regexp.MustCompile(`(?i)\b(?:` + wipLabel + `|` + doNotMergeLabel + `)\b`)
-)
+var wipRE = regexp.MustCompile(`(?i)\b(?:` + wipLabel + `|` + doNotMergeLabel + `)\b`)
 
 type wip struct{}
 
-func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
+func (h *wip) EventTypesHandled() []string {
+	return []string{"pull_request"}
+}
+
+func (h *wip) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+
 	event, ok := eventObject.(*github.PullRequestEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
-	}
-
-	if event.Installation == nil {
-		return nil
 	}
 
 	if !h.actionTypeRequiresHandling(event.GetAction()) {
@@ -58,13 +55,8 @@ func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClie
 		return nil
 	}
 
-	gh, err := ghClientFunc(event.Installation.GetID())
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
-	}
-
 	if wipRE.MatchString(event.PullRequest.GetTitle()) {
-		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - titled as work in progress", event, gh)
+		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - titled as work in progress", event.Repo, event.PullRequest, gh)
 	}
 
 	labelledAsWIP, err := prIsLabelledWithOneOfSpecifiedLabels(event.PullRequest, []string{wipLabel, doNotMergeLabel, labelStatusPrefix + wipLabel}, event.Repo, gh)
@@ -72,19 +64,13 @@ func (h *wip) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClie
 		return errors.Wrapf(err, "failed to check for WIP labels on PR %s", event.PullRequest.GetHTMLURL())
 	}
 	if labelledAsWIP {
-		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - labelled as work in progress", event, gh)
+		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - labelled as work in progress", event.Repo, event.PullRequest, gh)
 	}
 
-	prNeedsReview, err := doesPRNeedReview(event.PullRequest, event.Repo, gh)
-	if err != nil {
-		return errors.Wrapf(err, "failed to check for review status on PR %s", event.PullRequest.GetHTMLURL())
-	}
-	if prNeedsReview {
-		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Not ready for merge - requested review not yet completed", event, gh)
-	}
-
-	return createContextWithSpecifiedStatus(wipContext, successStatus, "Ready to merge - this is not a work in progress", event, gh)
+	// All good
+	return createContextWithSpecifiedStatus(wipContext, successStatus, "OK - this is not a work in progress", event.Repo, event.PullRequest, gh)
 }
+
 
 func (h *wip) actionTypeRequiresHandling(action string) bool {
 	a := strings.ToLower(action)

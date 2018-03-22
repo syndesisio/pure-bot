@@ -81,3 +81,7 @@
 [[constraint]]
   name = "go.uber.org/zap"
   version = "1.4.1"
+
+[[constraint]]
+  name = "github.com/google/go-github"
+  branch = "master"

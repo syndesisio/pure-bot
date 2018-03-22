@@ -17,40 +17,33 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
+	"go.uber.org/zap"
 )
 
-var addLabelOnReviewApprovalHandler Handler = &addLabelOnReviewApproval{}
-
 const (
-	approvedLabel       = "approved"
-	approvedReviewState = "approved"
+	approvedLabel  = "approved"
+	assignedAction = "approved"
 )
 
 type addLabelOnReviewApproval struct{}
 
-func (h *addLabelOnReviewApproval) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
+func (h *addLabelOnReviewApproval) EventTypesHandled() []string {
+	return []string{"pull_request_review"}
+}
+
+func (h *addLabelOnReviewApproval) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.PullRequestReviewEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
 	}
 
-	if event.Installation == nil {
+	if strings.ToLower(event.Review.GetState()) != assignedAction {
 		return nil
-	}
-
-	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
-		return nil
-	}
-
-	gh, err := ghClientFunc(event.Installation.GetID())
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
 	owner, repo, prNumber, prURL := event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), event.PullRequest.GetHTMLURL()
