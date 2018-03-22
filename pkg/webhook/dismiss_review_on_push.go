@@ -16,40 +16,31 @@ package webhook
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 )
 
-var (
-	dismissReviewHandler Handler = &dismissReview{}
-
-	dismissMessage = "Code changed after review"
-)
+var dismissMessage = "Code changed after review"
 
 type dismissReview struct{}
 
-func (h *dismissReview) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
+func (h *dismissReview) EventTypesHandled() []string {
+	return []string{"pull_request"}
+}
+
+func (h *dismissReview) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.PullRequestEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
 	}
 
-	if event.Installation == nil {
-		return nil
-	}
-
 	if strings.ToLower(event.GetAction()) != "synchronize" {
 		return nil
-	}
-
-	gh, err := ghClientFunc(event.Installation.GetID())
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
 	reviews, _, err := gh.PullRequests.ListReviews(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), &github.ListOptions{})
@@ -59,7 +50,7 @@ func (h *dismissReview) HandleEvent(w http.ResponseWriter, eventObject interface
 
 	var multiErr error
 	for _, review := range reviews {
-		_, _, err = gh.PullRequests.DismissReview(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetNumber(), review.GetID(), &github.PullRequestReviewDismissalRequest{
+		_, _, err = gh.PullRequests.DismissReview(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetID(), review.GetID(), &github.PullRequestReviewDismissalRequest{
 			Message: &dismissMessage,
 		})
 		multiErr = multierr.Combine(multiErr, err)

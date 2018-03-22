@@ -26,40 +26,73 @@ import (
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"github.com/syndesisio/pure-bot/pkg/github/apps"
 	"go.uber.org/zap"
+	"reflect"
 )
 
 type GitHubAppsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(w http.ResponseWriter, eventObject interface{}, f GitHubAppsClientFunc, config config.GitHubAppConfig) error
+	HandleEvent(eventObject interface{}, client *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error
+
+	EventTypesHandled() []string
 }
 
 var (
-	handlers = map[string][]Handler{
-		//"pull_request": {dismissReviewHandler},
-		"pull_request_review": {addLabelOnReviewApprovalHandler, autoMergeHandler},
-		"pull_request":        {autoMergeHandler, wipHandler},
-		"status":              {autoMergeHandler},
-		"issues":              {labelNewIssueHandler},
+	// List of all handlers used
+	handlers = []Handler{
+		&addLabelOnReviewApproval{},
+		&reviewerRequest{},
+		&autoMerger{},
+		&wip{},
+		&newIssueLabel{},
+		//		&dismissReview{},
+		//		&failedStatusCheckAddComment{},
 	}
+	handlerMap map[string][]Handler
 )
 
-func newGitHubClientFunc(appID int, privateKeyFile string) (GitHubAppsClientFunc, error) {
+func init() {
+	handlerMap = make(map[string][]Handler)
+
+	// Register handlers per event type
+	for _, handler := range handlers {
+		for _, eventType := range handler.EventTypesHandled() {
+			if handlerMap[eventType] == nil {
+				handlerMap[eventType] = make([]Handler, 0)
+			}
+			handlerMap[eventType] = append(handlerMap[eventType], handler)
+		}
+	}
+}
+
+func newGitHubClient(appID int64, privateKeyFile string, installationID int64) (*github.Client, error) {
 	key, err := ioutil.ReadFile(privateKeyFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read private key file")
 	}
 
-	return func(installationID int) (*github.Client, error) {
-		return apps.Client(appID, installationID, key)
-	}, nil
+	return apps.Client(appID, installationID, key)
+}
+
+func createClient(appCfg config.GitHubAppConfig, event interface{}) (*github.Client, error) {
+
+	val := reflect.Indirect(reflect.ValueOf(event))
+	// Find installation via inspection
+	if _, found := val.Type().FieldByName("Installation"); !found {
+		return nil, errors.New("event does not contain an installation ID, cannot create github client")
+	}
+	installation := val.FieldByName("Installation").Interface().(*github.Installation)
+	if installation == nil {
+		return nil, errors.Errorf("no installation in event %v found, so no GitHub client could be created", event)
+	}
+	client, err := newGitHubClient(appCfg.AppID, appCfg.PrivateKeyFile, *installation.ID)
+	if err != nil {
+		return nil, errors.New("cannot create github client")
+	}
+	return client, nil
 }
 
 func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, logger *zap.Logger) (http.HandlerFunc, error) {
-	newGHClientF, err := newGitHubClientFunc(appCfg.AppID, appCfg.PrivateKeyFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create apps client func")
-	}
 	webhookSecret := ([]byte)(cfg.Secret)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload []byte
@@ -80,11 +113,31 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 			}
 			payload = pl
 		}
+
 		messageType := github.WebHookType(r)
 		event, err := github.ParseWebHook(messageType, payload)
-		for _, wh := range handlers[messageType] {
-			err = multierr.Combine(err, wh.HandleEvent(w, event, newGHClientF, appCfg))
+		if err != nil {
+			logger.Error("failed to parse webhook", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
+
+		client, err := createClient(appCfg, event)
+		if err != nil {
+			logger.Error("failed to create GitHub client", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// ========================================================================
+		// Call all handlers
+		for _, wh := range handlerMap[messageType] {
+			logger.Debug("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
+			err = multierr.Combine(err, wh.HandleEvent(event, client, appCfg, logger))
+		}
+
+		// =========================================================================
+
 		if err != nil {
 			logger.Error("webhook handler failed", zap.String("error", fmt.Sprintf("%+v", err)))
 			w.WriteHeader(http.StatusInternalServerError)

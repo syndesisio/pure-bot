@@ -24,9 +24,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 )
-
-var autoMergeHandler Handler = &autoMerger{}
 
 const (
 	labeledEvent            = "labeled"
@@ -35,41 +34,40 @@ const (
 
 type autoMerger struct{}
 
-func (h *autoMerger) HandleEvent(w http.ResponseWriter, eventObject interface{}, ghClientFunc GitHubAppsClientFunc, config config.GitHubAppConfig) error {
+func (h *autoMerger) EventTypesHandled() []string {
+	return []string{"pull_request", "status", "pull_request_review"}
+}
+
+func (h *autoMerger) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
 	switch event := eventObject.(type) {
 	case *github.PullRequestEvent:
-		return h.handlePullRequestEvent(w, event, ghClientFunc)
+		return h.handlePullRequestEvent(event, gh)
 	case *github.StatusEvent:
-		return h.handleStatusEvent(w, event, ghClientFunc)
+		return h.handleStatusEvent(event, gh)
 	case *github.PullRequestReviewEvent:
-		return h.handlePullRequestReviewEvent(w, event, ghClientFunc)
+		return h.handlePullRequestReviewEvent(event, gh)
 	default:
 		return nil
 	}
 }
 
-func (h *autoMerger) handlePullRequestReviewEvent(w http.ResponseWriter, event *github.PullRequestReviewEvent, ghClientFunc GitHubAppsClientFunc) error {
+func (h *autoMerger) handlePullRequestReviewEvent(event *github.PullRequestReviewEvent, gh *github.Client) error {
 	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
 		return nil
 	}
 
-	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh)
 }
 
-func (h *autoMerger) handlePullRequestEvent(w http.ResponseWriter, event *github.PullRequestEvent, ghClientFunc GitHubAppsClientFunc) error {
+func (h *autoMerger) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client) error {
 	if strings.ToLower(event.GetAction()) != labeledEvent {
 		return nil
 	}
 
-	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, ghClientFunc)
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh)
 }
 
-func (h *autoMerger) mergePRFromPullRequestEvent(installationID int, repo *github.Repository, pullRequest *github.PullRequest, ghClientFunc GitHubAppsClientFunc) error {
-	gh, err := ghClientFunc(installationID)
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
-	}
-
+func (h *autoMerger) mergePRFromPullRequestEvent(installationID int64, repo *github.Repository, pullRequest *github.PullRequest, gh *github.Client) error {
 	issue, _, err := gh.Issues.Get(context.Background(), repo.Owner.GetLogin(), repo.GetName(), pullRequest.GetNumber())
 	if err != nil {
 		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
@@ -78,18 +76,9 @@ func (h *autoMerger) mergePRFromPullRequestEvent(installationID int, repo *githu
 	return mergePR(issue, pullRequest, repo.Owner.GetLogin(), repo.GetName(), gh, "")
 }
 
-func (h *autoMerger) handleStatusEvent(w http.ResponseWriter, event *github.StatusEvent, ghClientFunc GitHubAppsClientFunc) error {
+func (h *autoMerger) handleStatusEvent(event *github.StatusEvent, gh *github.Client) error {
 	if strings.ToLower(event.GetState()) != statusEventSuccessState {
 		return nil
-	}
-
-	if event.Installation == nil {
-		return nil
-	}
-
-	gh, err := ghClientFunc(event.Installation.GetID())
-	if err != nil {
-		return errors.Wrap(err, "failed to create a GitHub client")
 	}
 
 	commitSHA := event.GetSHA()

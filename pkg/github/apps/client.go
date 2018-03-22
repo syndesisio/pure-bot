@@ -24,7 +24,7 @@ import (
 // Shared transport to reuse TCP connections.
 var tr = &http.Transport{}
 
-func Client(appID, installationID int, privateKey []byte) (*github.Client, error) {
+func Client(appID, installationID int64, privateKey []byte) (*github.Client, error) {
 	itr, err := NewTransport(tr, appID, installationID, privateKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create transport from private key file")

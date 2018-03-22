@@ -43,8 +43,8 @@ type Transport struct {
 	BaseURL        string            // baseURL is the scheme and host for GitHub API, defaults to https://api.github.com
 	tr             http.RoundTripper // tr is the underlying roundtripper being wrapped
 	key            *rsa.PrivateKey   // key is the GitHub Apps's private key
-	appID          int               // appID is the GitHub App's ID
-	installationID int               // installationID is the GitHub Apps's Installation ID
+	appID          int64             // appID is the GitHub App's ID
+	installationID int64             // installationID is the GitHub Apps's Installation ID
 
 	mu    *sync.Mutex  // mu protects token
 	token *accessToken // token is the installation's access token
@@ -59,7 +59,7 @@ type accessToken struct {
 var _ http.RoundTripper = &Transport{}
 
 // NewTransportFromKeyFile returns an Transport using a private key from file.
-func NewTransportFromKeyFile(tr http.RoundTripper, appID, installationID int, privateKeyFile string) (*Transport, error) {
+func NewTransportFromKeyFile(tr http.RoundTripper, appID, installationID int64, privateKeyFile string) (*Transport, error) {
 	privateKey, err := ioutil.ReadFile(privateKeyFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read private key")
@@ -74,7 +74,7 @@ func NewTransportFromKeyFile(tr http.RoundTripper, appID, installationID int, pr
 // installations to ensure reuse of underlying TCP connections.
 //
 // The returned Transport is safe to be used concurrently.
-func NewTransport(tr http.RoundTripper, appID, installationID int, privateKey []byte) (*Transport, error) {
+func NewTransport(tr http.RoundTripper, appID, installationID int64, privateKey []byte) (*Transport, error) {
 	t := &Transport{
 		tr:             tr,
 		appID:          appID,
@@ -112,7 +112,7 @@ func (t *Transport) refreshToken() error {
 	claims := &jwt.StandardClaims{
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Minute).Unix(),
-		Issuer:    strconv.Itoa(t.appID),
+		Issuer:    strconv.FormatInt(t.appID, 10),
 	}
 	bearer := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 

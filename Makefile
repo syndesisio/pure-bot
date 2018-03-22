@@ -140,7 +140,8 @@ image: .image-$(DOTFILE_IMAGE) image-name
 	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-$(ARCH) .
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
-image-test: image 
+image-test: image
+	@echo "Build date: $(BUILD_DATE)"
 	@docker tag $(IMAGE):$(VERSION) $(IMAGE):testing
 	@docker push $(IMAGE):testing
 
