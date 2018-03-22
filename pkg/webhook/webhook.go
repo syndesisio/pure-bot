@@ -23,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
+	"github.com/imdario/mergo"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"github.com/syndesisio/pure-bot/pkg/github/apps"
 	"go.uber.org/zap"
@@ -32,7 +33,7 @@ import (
 type GitHubAppsClientFunc func(installationID int) (*github.Client, error)
 
 type Handler interface {
-	HandleEvent(eventObject interface{}, client *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error
+	HandleEvent(eventObject interface{}, client *github.Client, config config.RepoConfig, logger *zap.Logger) error
 
 	EventTypesHandled() []string
 }
@@ -92,7 +93,7 @@ func createClient(appCfg config.GitHubAppConfig, event interface{}) (*github.Cli
 	return client, nil
 }
 
-func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, logger *zap.Logger) (http.HandlerFunc, error) {
+func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.Logger) (http.HandlerFunc, error) {
 	webhookSecret := ([]byte)(cfg.Secret)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload []byte
@@ -122,7 +123,17 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 			return
 		}
 
-		client, err := createClient(appCfg, event)
+		repo := extractRepository(event)
+		repoConfig := extractRepoConfigWithDefaults(repo, config)
+		if repo != nil {
+			logger.Debug("Processing event", zap.String("repo", *repo.Name))
+		}
+		if repoConfig.Disabled {
+			logger.Debug("Disabled by configuration", zap.String("repo", *repo.Name))
+			return
+		}
+
+		client, err := createClient(config.GitHubApp, event)
 		if err != nil {
 			logger.Error("failed to create GitHub client", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -133,7 +144,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 		// Call all handlers
 		for _, wh := range handlerMap[messageType] {
 			logger.Debug("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
-			err = multierr.Combine(err, wh.HandleEvent(event, client, appCfg, logger))
+			err = multierr.Combine(err, wh.HandleEvent(event, client, *repoConfig, logger))
 		}
 
 		// =========================================================================
@@ -143,4 +154,32 @@ func NewHTTPHandler(cfg config.WebhookConfig, appCfg config.GitHubAppConfig, log
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}, nil
+}
+
+func extractRepoConfigWithDefaults(repo *github.Repository, fullConfig config.Config) *config.RepoConfig {
+
+	ret := &config.RepoConfig{
+		Disabled: false,
+	}
+
+	if repo == nil {
+		return ret
+	}
+
+	var repoSpecificConfig config.RepoConfig
+	if len(fullConfig.Repos) > 0 {
+		repoSpecificConfig = fullConfig.Repos[*repo.Name]
+	}
+
+	mergo.Merge(ret, fullConfig.DefaultRepo, mergo.WithOverride)
+	mergo.Merge(ret, repoSpecificConfig, mergo.WithOverride)
+	return ret
+}
+
+func extractRepository(event interface{}) *github.Repository {
+	val := reflect.Indirect(reflect.ValueOf(event))
+	if _, found := val.Type().FieldByName("Repo"); !found {
+		return nil
+	}
+	return val.FieldByName("Repo").Interface().(*github.Repository)
 }

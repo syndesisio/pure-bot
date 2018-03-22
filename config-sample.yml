@@ -1,0 +1,24 @@
+webhook:
+  secret: 1221324354554354354353
+github:
+  appId: 1968
+  privateKey: /secrets/private-key
+defaults:
+  labels:
+    approved: "approved"
+    wip:
+    - "status/wip"
+    - "wip"
+    - "do not merge"
+  wipPatterns:
+  - "do not merge"
+  - "wip"
+repos:
+  syndesis:
+    labels:
+      reviewRequested: "status/review-requested"
+      approved: "status/approved"
+      newIssues:
+      - "notif/triage"
+  pure-bot-sandbox:
+    disabled: true

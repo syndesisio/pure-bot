@@ -64,26 +64,6 @@ func labelsContainsLabel(labels []*github.Label, label string) bool {
 	return false
 }
 
-func prIsLabelledWithOneOfSpecifiedLabels(pr *github.PullRequest, specifiedLabels []string, repo *github.Repository, gh *github.Client) (bool, error) {
-	labels, _, err := gh.Issues.ListLabelsByIssue(
-		context.Background(),
-		repo.Owner.GetLogin(),
-		repo.GetName(),
-		pr.GetNumber(),
-		nil,
-	)
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to list labels for PR %s", pr.GetHTMLURL())
-	}
-
-	for _, label := range specifiedLabels {
-		if labelsContainsLabel(labels, label) {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 type commitStatus string
 
 var (

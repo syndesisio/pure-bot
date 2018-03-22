@@ -35,7 +35,7 @@ var runCmd = &cobra.Command{
 	Short: "Runs pure-bot",
 	Long:  `Runs pure-bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig.GitHubApp, logger.Named("webhook"))
+		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig, logger.Named("webhook"))
 		if err != nil {
 			logger.Fatal("failed to create webhook handler", zap.Error(err))
 		}

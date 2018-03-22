@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	approvedLabel       = "approved"
 	approvedReviewState = "approved"
 )
 
@@ -36,10 +35,16 @@ func (h *addLabelOnReviewApproval) EventTypesHandled() []string {
 	return []string{"pull_request_review"}
 }
 
-func (h *addLabelOnReviewApproval) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *addLabelOnReviewApproval) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.PullRequestReviewEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
+	}
+
+	approvedLabel := config.Labels.Approved
+	// Disabled because not configured
+	if approvedLabel == "" {
+		return nil
 	}
 
 	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
