@@ -38,45 +38,42 @@ func (h *autoMerger) EventTypesHandled() []string {
 	return []string{"pull_request", "status", "pull_request_review"}
 }
 
-func (h *autoMerger) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *autoMerger) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
+
+	approvedLabel := config.Labels.Approved
+	if approvedLabel == "" {
+		return nil
+	}
+
 	switch event := eventObject.(type) {
 	case *github.PullRequestEvent:
-		return h.handlePullRequestEvent(event, gh)
+		return h.handlePullRequestEvent(event, gh, config)
 	case *github.StatusEvent:
-		return h.handleStatusEvent(event, gh)
+		return h.handleStatusEvent(event, gh, config)
 	case *github.PullRequestReviewEvent:
-		return h.handlePullRequestReviewEvent(event, gh)
+		return h.handlePullRequestReviewEvent(event, gh, config)
 	default:
 		return nil
 	}
 }
 
-func (h *autoMerger) handlePullRequestReviewEvent(event *github.PullRequestReviewEvent, gh *github.Client) error {
+func (h *autoMerger) handlePullRequestReviewEvent(event *github.PullRequestReviewEvent, gh *github.Client, config config.RepoConfig) error {
 	if strings.ToLower(event.Review.GetState()) != approvedReviewState {
 		return nil
 	}
 
-	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh)
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh, config)
 }
 
-func (h *autoMerger) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client) error {
+func (h *autoMerger) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client, config config.RepoConfig) error {
 	if strings.ToLower(event.GetAction()) != labeledEvent {
 		return nil
 	}
 
-	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh)
+	return h.mergePRFromPullRequestEvent(event.Installation.GetID(), event.Repo, event.PullRequest, gh, config)
 }
 
-func (h *autoMerger) mergePRFromPullRequestEvent(installationID int64, repo *github.Repository, pullRequest *github.PullRequest, gh *github.Client) error {
-	issue, _, err := gh.Issues.Get(context.Background(), repo.Owner.GetLogin(), repo.GetName(), pullRequest.GetNumber())
-	if err != nil {
-		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
-	}
-
-	return mergePR(issue, pullRequest, repo.Owner.GetLogin(), repo.GetName(), gh, "")
-}
-
-func (h *autoMerger) handleStatusEvent(event *github.StatusEvent, gh *github.Client) error {
+func (h *autoMerger) handleStatusEvent(event *github.StatusEvent, gh *github.Client, config config.RepoConfig) error {
 	if strings.ToLower(event.GetState()) != statusEventSuccessState {
 		return nil
 	}
@@ -99,7 +96,7 @@ func (h *autoMerger) handleStatusEvent(event *github.StatusEvent, gh *github.Cli
 			continue
 		}
 
-		err = mergePR(&issue, pr, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA)
+		err = mergePR(&issue, pr, event.Repo.Owner.GetLogin(), event.Repo.GetName(), gh, commitSHA, config)
 		if err != nil {
 			multiErr = multierr.Combine(multiErr, err)
 			continue
@@ -109,8 +106,17 @@ func (h *autoMerger) handleStatusEvent(event *github.StatusEvent, gh *github.Cli
 	return multiErr
 }
 
-func mergePR(issue *github.Issue, pr *github.PullRequest, owner, repository string, gh *github.Client, commitSHA string) error {
-	if !containsLabel(issue.Labels, approvedLabel) {
+func (h *autoMerger) mergePRFromPullRequestEvent(installationID int64, repo *github.Repository, pullRequest *github.PullRequest, gh *github.Client, config config.RepoConfig) error {
+	issue, _, err := gh.Issues.Get(context.Background(), repo.Owner.GetLogin(), repo.GetName(), pullRequest.GetNumber())
+	if err != nil {
+		return errors.Wrapf(err, "failed to get pull request %s", pullRequest.GetHTMLURL())
+	}
+
+	return mergePR(issue, pullRequest, repo.Owner.GetLogin(), repo.GetName(), gh, "", config)
+}
+
+func mergePR(issue *github.Issue, pr *github.PullRequest, owner, repository string, gh *github.Client, commitSHA string, config config.RepoConfig) error {
+	if !containsLabel(issue.Labels, config.Labels.Approved) {
 		return nil
 	}
 

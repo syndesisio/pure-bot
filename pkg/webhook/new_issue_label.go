@@ -16,13 +16,15 @@ func (h *newIssueLabel) EventTypesHandled() []string {
 	return []string{"issues"}
 }
 
-func (h *newIssueLabel) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *newIssueLabel) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.IssuesEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
 	}
 
-	if config.NewIssueLabels == nil {
+	labelConfig := config.Labels
+
+	if labelConfig.NewIssues == nil {
 		return nil
 	}
 
@@ -30,6 +32,6 @@ func (h *newIssueLabel) HandleEvent(eventObject interface{}, gh *github.Client, 
 		return nil
 	}
 
-	_, _, err := gh.Issues.AddLabelsToIssue(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.Issue.GetNumber(), config.NewIssueLabels)
+	_, _, err := gh.Issues.AddLabelsToIssue(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.Issue.GetNumber(), labelConfig.NewIssues)
 	return err
 }

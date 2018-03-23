@@ -22,13 +22,21 @@ func NewWithDefaults() Config {
 		},
 		WebhookConfig{},
 		GitHubAppConfig{},
+		RepoConfig{
+			Labels: LabelConfig{
+				Approved: "approved",
+			},
+		},
+		nil,
 	}
 }
 
 type Config struct {
-	HTTP      HTTPConfig      `mapstructure:"http"`
-	Webhook   WebhookConfig   `mapstructure:"webhook"`
-	GitHubApp GitHubAppConfig `mapstructure:"github"`
+	HTTP        HTTPConfig            `mapstructure:"http"`
+	Webhook     WebhookConfig         `mapstructure:"webhook"`
+	GitHubApp   GitHubAppConfig       `mapstructure:"github"`
+	DefaultRepo RepoConfig            `mapstructure:"defaults"`
+	Repos       map[string]RepoConfig `mapstructure:"repos"`
 }
 
 type HTTPConfig struct {
@@ -43,8 +51,19 @@ type WebhookConfig struct {
 }
 
 type GitHubAppConfig struct {
-	AppID                int64    `mapstructure:"appId"`
-	PrivateKeyFile       string   `mapstructure:"privateKey"`
-	ReviewRequestedLabel string   `mapstructure:"reviewRequestedLabel"`
-	NewIssueLabels       []string `mapstructure:"newIssueLabels"`
+	AppID          int64  `mapstructure:"appId"`
+	PrivateKeyFile string `mapstructure:"privateKey"`
+}
+
+type RepoConfig struct {
+	Disabled    bool        `mapstructure:"disabled"`
+	Labels      LabelConfig `mapstructure:"labels"`
+	WipPatterns []string    `mapstructure:"wipPatterns"`
+}
+
+type LabelConfig struct {
+	NewIssues       []string `mapstructure:"newIssues"`
+	Wip             []string `mapstructure:"wip"`
+	ReviewRequested string   `mapstructure:"reviewRequested"`
+	Approved        string   `mapstructure:"approved"`
 }

@@ -34,7 +34,7 @@ Flags:
 
 Global Flags:
       --config string     config file (default is $HOME/.pure-bot.yaml)
-      --log-level Level   log level (default info)
+      --debug             switch on debugging
 ```
 
 ## Building
@@ -150,11 +150,67 @@ github:
   # Path to the private key downloaded from the setup
   privateKey: /secrets/private-key
 
-  # Labels automatically to apply when a new issue is created
-  newIssueLabels:
-  - notify/triage
-  - new
+# Default configuration for all repos
+defaults:
+
+  # Label related configuration
+  labels:
+
+    # Label applied when a review is approved.
+    # If this label is given this switches on also the feature
+    # of automerging when a review is aproved
+    approved: "approved"
+
+    # List of labels which can be used to mark a PR as 'work in progress'
+    # In this case no automerging will be performed and a status check
+    # will be set to pending. If this list is not configured, then
+    # this feature is switched off
+    wip:
+    - "status/wip"
+    - "wip"
+    - "do not merge"
+
+    # Label added when a reviewer is explicitely requested. In this case
+    # also a status check "pure-bot/review-requested" is added which
+    # will block until a first review is provided. If no such configuration
+    # is given, this feature is switched # off
+    reviewRequested: "status/review-requested"
+
+    # List of labels to add when a new issue (not PR) is created.
+    newIssues:
+    - "triage"
+
+  # List of patterns which when given in the title of a PR will prevent
+  # automerging and a pure-bot/wip check will fail. Same semantics `labels: wip`
+  # and can be used in addition. If no list is provide no check on the PR
+  # title is performed.
+  wipPatterns:
+  - "do not merge"
+  - "wip"
+
+# Repos specific configuration overriding the defaults explained above
+repos:
+
+  # Repo name is the key of this map
+  syndesis:
+
+    # Overriding defaults. Until know there is not yet a way to _remove_ a config
+    # here.
+    labels:
+      reviewRequested: "status/review-requested"
+      approved: "status/approved"
+      newIssues:
+      - "notif/triage"
+
+  pure-bot-sandbox:
+
+    # You can disable pure-bot alltogether for certain repositories, which might be useful
+    # if you enable pure-bot for a whole organization to be used by new repos
+    # by default
+    disabled: true
 ```
+
+As explained above, certain features are switched on only if the corresponding configuration is given.
 
 ## Testing
 

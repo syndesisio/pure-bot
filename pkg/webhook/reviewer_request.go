@@ -20,10 +20,12 @@ func (h *reviewerRequest) EventTypesHandled() []string {
 	return []string{"pull_request", "pull_request_review"}
 }
 
-func (h *reviewerRequest) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *reviewerRequest) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
+
+	labelConfig := config.Labels
 
 	// Only run when label has been configured
-	label := config.ReviewRequestedLabel
+	label := labelConfig.ReviewRequested
 	if label == "" {
 		return nil
 	}
@@ -93,7 +95,7 @@ func updateReviewStatus(pr *github.PullRequest, repo *github.Repository, gh *git
 
 	if !hasLabel(pr, label) {
 		logger.Debug("No review requested", zap.Bool("pass", true))
-		return createContextWithSpecifiedStatus(prReviewContext, successStatus, "OK - No review requested", repo, pr, gh)
+		return createContextWithSpecifiedStatus(prReviewContext, successStatus, "OK - no review requested", repo, pr, gh)
 	}
 
 	reviews, err := listReviews(pr, repo, gh)
@@ -103,11 +105,11 @@ func updateReviewStatus(pr *github.PullRequest, repo *github.Repository, gh *git
 
 	if len(reviews) == 0 {
 		logger.Debug("Review requested but none found", zap.Bool("pass", false))
-		return createContextWithSpecifiedStatus(prReviewContext, pendingStatus, "Pending - Reviews requested but none provided", repo, pr, gh)
+		return createContextWithSpecifiedStatus(prReviewContext, pendingStatus, "Pending - reviews requested but none provided", repo, pr, gh)
 	}
 
 	logger.Debug("Review requested and reviews found", zap.Bool("pass", true), zap.Int("nrReviews", len(reviews)))
-	return createContextWithSpecifiedStatus(prReviewContext, successStatus, "OK - Review requested and at least one provided", repo, pr, gh)
+	return createContextWithSpecifiedStatus(prReviewContext, successStatus, "OK - review requested and at least one provided", repo, pr, gh)
 }
 
 // ==============================================================================================

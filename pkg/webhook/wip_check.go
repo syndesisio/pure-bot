@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"strings"
 
+	"context"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
@@ -25,14 +26,8 @@ import (
 )
 
 const (
-	wipLabel          = "wip"
-	doNotMergeLabel   = "do not merge"
-	labelStatusPrefix = "status/"
-
 	wipContext = "pure-bot/wip"
 )
-
-var wipRE = regexp.MustCompile(`(?i)\b(?:` + wipLabel + `|` + doNotMergeLabel + `)\b`)
 
 type wip struct{}
 
@@ -40,11 +35,16 @@ func (h *wip) EventTypesHandled() []string {
 	return []string{"pull_request"}
 }
 
-func (h *wip) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *wip) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
 	event, ok := eventObject.(*github.PullRequestEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
+	}
+
+	// Not configured, not check
+	if config.WipPatterns == nil && config.Labels.Wip == nil {
+		return nil
 	}
 
 	if !h.actionTypeRequiresHandling(event.GetAction()) {
@@ -55,20 +55,53 @@ func (h *wip) HandleEvent(eventObject interface{}, gh *github.Client, config con
 		return nil
 	}
 
-	if wipRE.MatchString(event.PullRequest.GetTitle()) {
-		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - titled as work in progress", event.Repo, event.PullRequest, gh)
+	if wipPatternMatched := titleMatchesWipExpression(config, event.PullRequest.GetTitle()); wipPatternMatched != "" {
+		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - title marked as work in progress with '"+wipPatternMatched+"'", event.Repo, event.PullRequest, gh)
 	}
 
-	labelledAsWIP, err := prIsLabelledWithOneOfSpecifiedLabels(event.PullRequest, []string{wipLabel, doNotMergeLabel, labelStatusPrefix + wipLabel}, event.Repo, gh)
+	wipLabelFound, err := prIsLabelledWithOneOfSpecifiedLabels(event.PullRequest, config.Labels.Wip, event.Repo, gh)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check for WIP labels on PR %s", event.PullRequest.GetHTMLURL())
 	}
-	if labelledAsWIP {
-		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - labelled as work in progress", event.Repo, event.PullRequest, gh)
+	if wipLabelFound != "" {
+		return createContextWithSpecifiedStatus(wipContext, pendingStatus, "Pending - labelled as work in progress with '"+wipLabelFound+"'", event.Repo, event.PullRequest, gh)
 	}
 
 	// All good
 	return createContextWithSpecifiedStatus(wipContext, successStatus, "OK - this is not a work in progress", event.Repo, event.PullRequest, gh)
+}
+
+func titleMatchesWipExpression(config config.RepoConfig, title string) string {
+	if len(config.WipPatterns) == 0 {
+		return ""
+	}
+	for _, pattern := range config.WipPatterns {
+		var wipRE = regexp.MustCompile(`(?i)\b(?:` + pattern + `)\b`)
+		if found := wipRE.FindString(title); found != "" {
+			return found
+		}
+	}
+	return ""
+}
+
+func prIsLabelledWithOneOfSpecifiedLabels(pr *github.PullRequest, specifiedLabels []string, repo *github.Repository, gh *github.Client) (string, error) {
+	labels, _, err := gh.Issues.ListLabelsByIssue(
+		context.Background(),
+		repo.Owner.GetLogin(),
+		repo.GetName(),
+		pr.GetNumber(),
+		nil,
+	)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to list labels for PR %s", pr.GetHTMLURL())
+	}
+
+	for _, label := range specifiedLabels {
+		if labelsContainsLabel(labels, label) {
+			return label, nil
+		}
+	}
+	return "", nil
 }
 
 func (h *wip) actionTypeRequiresHandling(action string) bool {

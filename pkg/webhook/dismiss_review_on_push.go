@@ -33,7 +33,7 @@ func (h *dismissReview) EventTypesHandled() []string {
 	return []string{"pull_request"}
 }
 
-func (h *dismissReview) HandleEvent(eventObject interface{}, gh *github.Client, config config.GitHubAppConfig, logger *zap.Logger) error {
+func (h *dismissReview) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 	event, ok := eventObject.(*github.PullRequestEvent)
 	if !ok {
 		return errors.New("wrong event eventObject type")
