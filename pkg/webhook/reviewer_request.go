@@ -61,7 +61,7 @@ func (h *reviewerRequest) checkLabel(event *github.PullRequestEvent, gh *github.
 
 func handleReviewRequested(event *github.PullRequestEvent, pr *github.PullRequest, gh *github.Client, label string, logger *zap.Logger) error {
 
-	logger.Debug("Handling reviewer assignment", zap.Int64("user", *event.RequestedReviewer.ID))
+	logEvent(logger, "review request", event)
 	if hasLabel(pr, label) {
 		logger.Debug("Label " + label + "already exists")
 		return nil
@@ -70,8 +70,7 @@ func handleReviewRequested(event *github.PullRequestEvent, pr *github.PullReques
 }
 
 func handleReviewRequestRemoved(event *github.PullRequestEvent, pr *github.PullRequest, gh *github.Client, label string, logger *zap.Logger) error {
-	logger.Debug("Handling reviewer unassignment", zap.Int64("user", *event.RequestedReviewer.ID))
-
+	logEvent(logger, "review request removed", event)
 	if !hasLabel(pr, label) {
 		logger.Debug("No label assignment, so nothing to remove")
 		return nil
@@ -89,6 +88,13 @@ func handleReviewRequestRemoved(event *github.PullRequestEvent, pr *github.PullR
 	}
 
 	return removeLabel(event, gh, label, logger)
+}
+
+func logEvent(logger *zap.Logger, label string, event *github.PullRequestEvent) {
+	logger.Debug("Handling " + label)
+	if event.RequestedReviewer != nil && event.RequestedReviewer.ID != nil {
+		logger.Debug("review request user", zap.Int64("user", *event.RequestedReviewer.ID))
+	}
 }
 
 func updateReviewStatus(pr *github.PullRequest, repo *github.Repository, gh *github.Client, label string, logger *zap.Logger) error {
