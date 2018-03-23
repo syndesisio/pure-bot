@@ -30,6 +30,8 @@ jobs:
     steps:
       - checkout
 
+      - run: git fetch --tags
+
       - save_cache:
           key: code-repo-{{ .Environment.CIRCLE_SHA1 }}-{{ .Environment.CIRCLE_TAG }}
           paths:
