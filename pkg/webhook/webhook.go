@@ -46,6 +46,7 @@ var (
 		&autoMerger{},
 		&wip{},
 		&newIssueLabel{},
+		&boardUpdate{},
 		//		&dismissReview{},
 		//		&failedStatusCheckAddComment{},
 	}
@@ -126,10 +127,10 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 		repo := extractRepository(event)
 		repoConfig := extractRepoConfigWithDefaults(repo, config)
 		if repo != nil {
-			logger.Debug("Processing event", zap.String("repo", *repo.Name))
+			logger.Debug("Processing event ", zap.String("messageType", messageType), zap.String("repo", *repo.Name))
 		}
 		if repoConfig.Disabled {
-			logger.Debug("Disabled by configuration", zap.String("repo", *repo.Name))
+			logger.Info("Disabled by configuration", zap.String("repo", *repo.Name))
 			return
 		}
 
@@ -143,7 +144,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 		// ========================================================================
 		// Call all handlers
 		for _, wh := range handlerMap[messageType] {
-			logger.Debug("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
+			logger.Info("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
 			err = multierr.Combine(err, wh.HandleEvent(event, client, *repoConfig, logger))
 		}
 

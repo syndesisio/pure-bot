@@ -22,3 +22,15 @@ repos:
       - "notif/triage"
   pure-bot-sandbox:
     disabled: true
+    board:
+      zenhub_token: "<zenhub token>"
+      github_repo: "<github repository id>"
+      columns:
+        - name: "backlog"
+          id: "5b33b25ab0388a502999f52b"
+        - name: "progress"
+          id: "5b33b25ab0388a502999f52c"
+        - name: "review"
+          id: "5b33b25ab0388a502999f52d"
+        - name: "closed"
+          id: "5b33b25ab0388a502999f52e"
