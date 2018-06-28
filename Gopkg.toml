@@ -88,4 +88,4 @@
 
 [[constraint]]
   name = "github.com/go-resty/resty"
-  branch "master"
+  branch = "master"
