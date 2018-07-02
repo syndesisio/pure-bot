@@ -85,3 +85,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/google/go-github"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-resty/resty"
