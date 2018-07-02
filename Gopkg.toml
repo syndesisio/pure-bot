@@ -83,9 +83,9 @@
   version = "1.4.1"
 
 [[constraint]]
-  branch = "master"
+  revision = "8ea2e2657df890db8fb434a9274799d641bd698c"
   name = "github.com/google/go-github"
 
 [[constraint]]
-  branch = "master"
+  revision = "master"
   name = "github.com/go-resty/resty"
