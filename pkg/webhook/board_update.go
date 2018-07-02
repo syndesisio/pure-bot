@@ -1,14 +1,14 @@
 package webhook
 
 import (
+	"context"
+	"fmt"
+	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
 	"github.com/syndesisio/pure-bot/pkg/config"
-	"github.com/go-resty/resty"
 	"go.uber.org/zap"
-	"strconv"
-	"context"
 	"regexp"
-	"fmt"
+	"strconv"
 )
 
 type boardUpdate struct{}
@@ -18,8 +18,8 @@ func (h *boardUpdate) EventTypesHandled() []string {
 }
 
 type column struct {
-	name string;
-	id string;
+	name string
+	id   string
 }
 
 var stateMapping = map[string]column{}
@@ -29,9 +29,9 @@ var zenHubApi = "https://api.zenhub.io"
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
 	// initialise from config if needed
-	if(len(stateMapping) == 0) {
+	if len(stateMapping) == 0 {
 		for _, col := range config.Board.Columns {
-			c := column{ col.Name, col.Id}
+			c := column{col.Name, col.Id}
 			for _, event := range col.Events {
 				logger.Info("Mapping " + event + " to " + col.Name)
 				stateMapping[event] = c
@@ -40,29 +40,29 @@ func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, co
 	}
 
 	switch event := eventObject.(type) {
-		case *github.IssuesEvent:
-			return h.handleIssuesEvent(event, gh, config, logger)
-		case *github.PullRequestEvent:
-			return h.handlePullRequestEvent(event, gh, config, logger)
-		default:
-			return nil
+	case *github.IssuesEvent:
+		return h.handleIssuesEvent(event, gh, config, logger)
+	case *github.PullRequestEvent:
+		return h.handlePullRequestEvent(event, gh, config, logger)
+	default:
+		return nil
 	}
 }
 
 func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
-	var messageType =  "issues";
+	var messageType = "issues"
 
 	number := strconv.Itoa(*event.Issue.Number)
-	logger.Debug("Handling issuesEvent for issue "+ number)
-	logger.Debug("Issue Action: "+ *event.Action)
+	logger.Debug("Handling issuesEvent for issue " + number)
+	logger.Debug("Issue Action: " + *event.Action)
 
 	eventKey := messageType + "_" + *event.Action
 	col, ok := stateMapping[eventKey]
-	if(ok) {
+	if ok {
 		return moveIssueOnBoard(config, number, col)
 	} else {
-		logger.Debug ("Ignore ummapped event: "+eventKey)
+		logger.Debug("Ignore ummapped event: " + eventKey)
 	}
 
 	return nil
@@ -70,11 +70,11 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 
 func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
-	var messageType = "pull_request";
+	var messageType = "pull_request"
 
 	prNumber := strconv.Itoa(*event.PullRequest.Number)
-	logger.Info("Handling pullReqestEvent for PR "+ prNumber)
-	logger.Info("PR Action: "+ *event.Action)
+	logger.Info("Handling pullReqestEvent for PR " + prNumber)
+	logger.Info("PR Action: " + *event.Action)
 
 	commits, _, err := gh.PullRequests.ListCommits(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(),
 		*event.PullRequest.Number, nil)
@@ -84,7 +84,7 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 		return nil
 	}
 
-	for _, commit:= range commits {
+	for _, commit := range commits {
 
 		message := *commit.Commit.Message
 		logger.Debug("Processing commit message: " + message)
@@ -98,14 +98,14 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 
 			logger.Debug(match + " found at index" + strconv.Itoa(i))
 
-			if(i==5) { // brittle, breaks when regex changes
+			if i == 5 { // brittle, breaks when regex changes
 				// move issue when PR state changes
 				eventKey := messageType + "_" + *event.Action
 				col, ok := stateMapping[eventKey]
-				if(ok) {
+				if ok {
 					return moveIssueOnBoard(config, match, col)
 				} else {
-					logger.Debug ("Ignore ummapped event: "+eventKey)
+					logger.Debug("Ignore ummapped event: " + eventKey)
 				}
 
 			}
@@ -116,30 +116,27 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 	return nil
 }
 
-func moveIssueOnBoard (config config.RepoConfig, issue string, col column) error {
+func moveIssueOnBoard(config config.RepoConfig, issue string, col column) error {
 
-	fmt.Println("Moving #"+issue+" to `"+ col.name+"`")
+	fmt.Println("Moving #" + issue + " to `" + col.name + "`")
 
 	url := zenHubApi + "/p1/repositories/" + config.Board.GithubRepo + "/issues/" + issue + "/moves"
 	response, e := resty.R().
 		SetHeader("X-Authentication-Token", config.Board.ZenhubToken).
 		SetHeader("Content-Type", "application/json").
-		SetBody(`{"pipeline_id":"`+col.id+`", "position": "top"}`).
+		SetBody(`{"pipeline_id":"` + col.id + `", "position": "top"}`).
 		Post(url)
 
-
-		if(e!=nil) {
-			return e
-		}
+	if e != nil {
+		return e
+	}
 
 	//responseString := string(response.Body())
 	//fmt.Println(responseString)
 
-	if(response.StatusCode()>400) {
-		fmt.Println("[WARN] API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from "+url)
+	if response.StatusCode() > 400 {
+		fmt.Println("[WARN] API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
 	}
 
 	return nil
 }
-
-
