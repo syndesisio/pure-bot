@@ -96,7 +96,7 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 		match := regex.Match([]byte(message))
 		logger.Debug("regex matches: " + strconv.FormatBool(match))
 
-		issues := ExtractIssueNumbers(message)
+		issues := extractIssueNumbers(message)
 
 		for _, issue := range issues {
 			eventKey := messageType + "_" + *event.Action
@@ -112,7 +112,7 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 	return nil
 }
 
-func ExtractIssueNumbers(commitMessage string) []string {
+func extractIssueNumbers(commitMessage string) []string {
 	groupNames := regex.SubexpNames()
 	issues := []string{}
 	for _, match := range regex.FindAllStringSubmatch(commitMessage, -1) {
