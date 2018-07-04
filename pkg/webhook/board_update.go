@@ -26,7 +26,7 @@ var stateMapping = map[string]column{}
 
 var zenHubApi = "https://api.zenhub.io"
 
-var regex = regexp.MustCompile("(?mi)(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing))[^\\s]*\\s+#(?P<issue>[0-9]+)")
+var regex = regexp.MustCompile("(?mi)(?:clos(?:e[sd]?|ing)|fix(?:e[sd]|ing))[^\\s]*\\s+#(?P<issue>[0-9]+)")
 
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
