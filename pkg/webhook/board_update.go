@@ -60,7 +60,7 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 	eventKey := messageType + "_" + *event.Action
 	col, ok := stateMapping[eventKey]
 	if ok {
-		return moveIssueOnBoard(config, number, col)
+		return moveIssueOnBoard(config, number, col, logger)
 	} else {
 		logger.Debug("Ignore unmapped event: " + eventKey)
 	}
@@ -103,7 +103,7 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 				eventKey := messageType + "_" + *event.Action
 				col, ok := stateMapping[eventKey]
 				if ok {
-					return moveIssueOnBoard(config, match, col)
+					return moveIssueOnBoard(config, match, col, logger)
 				} else {
 					logger.Debug("Ignore ummapped event: " + eventKey)
 				}
@@ -116,7 +116,7 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 	return nil
 }
 
-func moveIssueOnBoard(config config.RepoConfig, issue string, col column) error {
+func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger *zap.Logger) error {
 
 	fmt.Println("Moving #" + issue + " to `" + col.name + "`")
 
@@ -135,7 +135,7 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column) error 
 	//fmt.Println(responseString)
 
 	if response.StatusCode() > 400 {
-		fmt.Println("[WARN] API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
+		logger.Warn("API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
 	}
 
 	return nil
