@@ -7,7 +7,6 @@ import (
 
 func TestIssueRegex(t *testing.T) {
 
-
 	// key words
 
 	issues := extractIssueNumbers("Fixes #19, Fixed #19, Fixing #19")
