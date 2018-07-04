@@ -26,6 +26,8 @@ var stateMapping = map[string]column{}
 
 var zenHubApi = "https://api.zenhub.io"
 
+var regex = regexp.MustCompile("(?mi)(?:[Cc]los(?:e[sd]?|ing)|[Ff]ix(?:e[sd]|ing))[^\\s]*\\s+#(?P<issue>[0-9]+)")
+
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
 	// initialise from config if needed
@@ -90,30 +92,40 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 		logger.Debug("Processing commit message: " + message)
 
 		// get issue id from commit message
-		var re = regexp.MustCompile(`(?mi)^.*((Fix)(.*)(#{1})([0-9]+))+.*$`)
-		match := re.Match([]byte(message))
+
+		match := regex.Match([]byte(message))
 		logger.Debug("regex matches: " + strconv.FormatBool(match))
 
-		for i, match := range re.FindStringSubmatch(message) {
+		issues := ExtractIssueNumbers(message)
 
-			logger.Debug(match + " found at index" + strconv.Itoa(i))
-
-			if i == 5 { // brittle, breaks when regex changes
-				// move issue when PR state changes
-				eventKey := messageType + "_" + *event.Action
-				col, ok := stateMapping[eventKey]
-				if ok {
-					return moveIssueOnBoard(config, match, col, logger)
-				} else {
-					logger.Debug("Ignore ummapped event: " + eventKey)
-				}
-
+		for _, issue := range issues {
+			eventKey := messageType + "_" + *event.Action
+			col, ok := stateMapping[eventKey]
+			if ok {
+				return moveIssueOnBoard(config, issue, col, logger)
+			} else {
+				logger.Debug("Ignore ummapped event: " + eventKey)
 			}
 		}
-
 	}
 
 	return nil
+}
+
+func ExtractIssueNumbers(commitMessage string) []string {
+	groupNames := regex.SubexpNames()
+	issues := []string{}
+	for _, match := range regex.FindAllStringSubmatch(commitMessage, -1) {
+		for groupIdx, _ := range match {
+			name := groupNames[groupIdx]
+
+			if name == "issue" {
+				issues = append(issues, match[1])
+			}
+		}
+	}
+
+	return issues
 }
 
 func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger *zap.Logger) error {
@@ -130,10 +142,7 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger
 	if err != nil {
 		return err
 	}
-
-	//responseString := string(response.Body())
-	//fmt.Println(responseString)
-
+	
 	if response.StatusCode() > 400 {
 		logger.Warn("API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
 	}
