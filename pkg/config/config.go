@@ -26,6 +26,9 @@ func NewWithDefaults() Config {
 			Labels: LabelConfig{
 				Approved: "approved",
 			},
+			Board: Board{
+				"<token>", "<repo>", []Column{},
+			},
 		},
 		nil,
 	}
@@ -59,6 +62,7 @@ type RepoConfig struct {
 	Disabled    bool        `mapstructure:"disabled"`
 	Labels      LabelConfig `mapstructure:"labels"`
 	WipPatterns []string    `mapstructure:"wipPatterns"`
+	Board       Board       `mapstructure:"board"`
 }
 
 type LabelConfig struct {
@@ -66,4 +70,16 @@ type LabelConfig struct {
 	Wip             []string `mapstructure:"wip"`
 	ReviewRequested string   `mapstructure:"reviewRequested"`
 	Approved        string   `mapstructure:"approved"`
+}
+
+type Board struct {
+	ZenhubToken string   `mapstructure:"zenhub_token"`
+	GithubRepo  string   `mapstructure:"github_repo"`
+	Columns     []Column `mapstructure:"columns"`
+}
+
+type Column struct {
+	Name   string   `mapstructure:"name"`
+	Id     string   `mapstructure:"id"`
+	Events []string `mapstructure:"events"`
 }

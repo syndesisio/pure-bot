@@ -42,6 +42,10 @@ var RootCmd = &cobra.Command{
 	Long:  `PuRe Bot - pull request bot.`,
 }
 
+func GetConfig() config.Config {
+	return botConfig
+}
+
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		if logger != nil {
