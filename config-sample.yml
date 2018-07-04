@@ -25,12 +25,24 @@ repos:
     board:
       zenhub_token: "<zenhub token>"
       github_repo: "<github repository id>"
-      columns:
-        - name: "backlog"
-          id: "5b33b25ab0388a502999f52b"
-        - name: "progress"
-          id: "5b33b25ab0388a502999f52c"
-        - name: "review"
-          id: "5b33b25ab0388a502999f52d"
-        - name: "closed"
-          id: "5b33b25ab0388a502999f52e"
+     columns:
+            - name: "backlog"
+              id: "5b33b25ab0388a502999f52b"
+              events:
+                - "issues_unassigned"
+                - "issues_opened"
+                - "issues_reopened"
+            - name: "progress"
+              id: "5b33b25ab0388a502999f52c"
+              events:
+                - "issues_assigned"
+                - "pull_request_closed"
+            - name: "review"
+              id: "5b33b25ab0388a502999f52d"
+              events:
+                - "pull_request_opened"
+                - "pull_request_reopened"
+            - name: "closed"
+              id: "5b33b25ab0388a502999f52e"
+              events:
+                - "issues_closed"
