@@ -121,14 +121,14 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column) error 
 	fmt.Println("Moving #" + issue + " to `" + col.name + "`")
 
 	url := zenHubApi + "/p1/repositories/" + config.Board.GithubRepo + "/issues/" + issue + "/moves"
-	response, e := resty.R().
+	response, err := resty.R().
 		SetHeader("X-Authentication-Token", config.Board.ZenhubToken).
 		SetHeader("Content-Type", "application/json").
 		SetBody(`{"pipeline_id":"` + col.id + `", "position": "top"}`).
 		Post(url)
 
-	if e != nil {
-		return e
+	if err != nil {
+		return err
 	}
 
 	//responseString := string(response.Body())
