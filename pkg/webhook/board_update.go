@@ -62,7 +62,7 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 	if ok {
 		return moveIssueOnBoard(config, number, col)
 	} else {
-		logger.Debug("Ignore ummapped event: " + eventKey)
+		logger.Debug("Ignore unmapped event: " + eventKey)
 	}
 
 	return nil
