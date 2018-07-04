@@ -142,7 +142,7 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger
 	if err != nil {
 		return err
 	}
-	
+
 	if response.StatusCode() > 400 {
 		logger.Warn("API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
 	}
