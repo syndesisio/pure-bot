@@ -2,13 +2,14 @@ package webhook
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/zap"
 	"regexp"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type boardUpdate struct{}
@@ -18,26 +19,43 @@ func (h *boardUpdate) EventTypesHandled() []string {
 }
 
 type column struct {
-	name string
-	id   string
+	name                string
+	id                  string
+	isPostMergePipeline bool
 }
 
 var stateMapping = map[string]column{}
+
+var postProcessing = make(map[string]column)
 
 var zenHubApi = "https://api.zenhub.io"
 
 var regex = regexp.MustCompile("(?mi)(?:clos(?:e[sd]?|ing)|fix(?:e[sd]|ing))[^\\s]*\\s+#(?P<issue>[0-9]+)")
 
+var doneColumn = &column{}
+
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
 	// initialise from config if needed
 	if len(stateMapping) == 0 {
+
+		logger.Info("Initialising state mappings ...")
+
 		for _, col := range config.Board.Columns {
-			c := column{col.Name, col.Id}
+			c := column{col.Name, col.Id, col.PostMergePipeline}
+
+			if c.isPostMergePipeline { // the last one flagged as post process will act as doneColumn
+				doneColumn = &c
+			}
+
 			for _, event := range col.Events {
 				logger.Info("Mapping " + event + " to " + col.Name)
 				stateMapping[event] = c
 			}
+		}
+
+		if doneColumn == nil || doneColumn.id == "" {
+			logger.Warn("Missing column definition for `Done`")
 		}
 	}
 
@@ -60,14 +78,89 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 	logger.Debug("Issue Action: " + *event.Action)
 
 	eventKey := messageType + "_" + *event.Action
+
+	// post processing (from previous event cycle)
+	// takes precedence, the event will no be processed further
+	if "issues_closed" == eventKey {
+		_, issue_scheduled := postProcessing[number]
+
+		if issue_scheduled {
+			delete(postProcessing, number)
+			go postProcess(event, gh, config, *doneColumn, logger)
+			return nil
+		}
+	} else if "issues_reopened" == eventKey && event.GetIssue().GetLocked() {
+		// move
+		err := moveIssueOnBoard(config, number, *doneColumn, logger)
+
+		// update progress/* label
+		changeProgressLabel(gh, event.Repo, *event.Issue, doneColumn.name)
+
+		if err != nil {
+			logger.Error("Post processing failed: Cannot move issue")
+		}
+	}
+
+	// cleanup post processing markers, but skip actions
+	if event.GetIssue().GetLocked() {
+		gh.Issues.Unlock(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number)
+		logger.Debug("Unlock and ignore event for: " + number)
+		return nil
+	}
+
+	// regular processing
 	col, ok := stateMapping[eventKey]
 	if ok {
-		return moveIssueOnBoard(config, number, col, logger)
+		err := moveIssueOnBoard(config, number, col, logger)
+
+		if nil == err {
+			// update progress/* label
+
+			changeProgressLabel(gh, event.Repo, *event.Issue, col.name)
+		}
+
+		return err
 	} else {
-		logger.Debug("Ignore unmapped event: " + eventKey)
+		logger.Debug("Ignore unmapped Issue event: " + eventKey)
 	}
 
 	return nil
+}
+
+func changeProgressLabel(gh *github.Client, repo *github.Repository, issue github.Issue, newLabel string) {
+
+	labels := []string{"progress/" + newLabel}
+
+	for _, label := range issue.Labels {
+		if strings.HasPrefix(*label.Name, "progress/") {
+			gh.Issues.RemoveLabelForIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
+				issue.GetNumber(), *label.Name)
+
+		}
+	}
+
+	gh.Issues.AddLabelsToIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
+		issue.GetNumber(), labels)
+}
+
+func postProcess(event *github.IssuesEvent, gh *github.Client, config config.RepoConfig, col column, logger *zap.Logger) {
+
+	number := strconv.Itoa(*event.Issue.Number)
+
+	logger.Debug("Handle grace time ... ")
+	time.Sleep(10 * time.Second)
+
+	_, e := gh.Issues.Lock(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number, &github.LockIssueOptions{LockReason: "resolved"})
+	if e != nil {
+		logger.Error("Locking issue failed: " + number)
+	}
+
+	// re-open
+	state := "open"
+	_, _, err := gh.Issues.Edit(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number, &github.IssueRequest{State: &state})
+	if err != nil {
+		logger.Error("Post processing failed ")
+	}
 }
 
 func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
@@ -100,11 +193,33 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 
 		for _, issue := range issues {
 			eventKey := messageType + "_" + *event.Action
+
+			// schedule post processing if needed
+			// closed & merged = comitted
+			if "pull_request_closed" == eventKey &&
+				event.GetPullRequest().GetMerged() &&
+				doneColumn.isPostMergePipeline {
+
+				// schedule completion with next event
+				logger.Debug("Schedule post processing for #" + issue)
+				postProcessing[issue] = *doneColumn
+				continue
+			}
+
+			// regular PR processing
 			col, ok := stateMapping[eventKey]
 			if ok {
-				return moveIssueOnBoard(config, issue, col, logger)
+				err := moveIssueOnBoard(config, issue, col, logger)
+
+				i, _ := strconv.Atoi(issue)
+				item, _, _ := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), i)
+
+				if nil == err {
+					changeProgressLabel(gh, event.Repo, *item, col.name)
+				}
+				return err
 			} else {
-				logger.Debug("Ignore ummapped event: " + eventKey)
+				logger.Debug("Ignore ummapped PR event: " + eventKey)
 			}
 		}
 	}
@@ -130,7 +245,7 @@ func extractIssueNumbers(commitMessage string) []string {
 
 func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger *zap.Logger) error {
 
-	fmt.Println("Moving #" + issue + " to `" + col.name + "`")
+	logger.Info("Moving #" + issue + " to `" + col.name + "`")
 
 	url := zenHubApi + "/p1/repositories/" + config.Board.GithubRepo + "/issues/" + issue + "/moves"
 	response, err := resty.R().
@@ -139,12 +254,14 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger
 		SetBody(`{"pipeline_id":"` + col.id + `", "position": "top"}`).
 		Post(url)
 
+	logger.Debug("Zenhub call status: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
+
 	if err != nil {
 		return err
 	}
 
 	if response.StatusCode() > 400 {
-		logger.Warn("API call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
+		logger.Warn("Zenhub call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
 	}
 
 	return nil

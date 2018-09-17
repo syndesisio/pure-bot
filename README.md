@@ -208,9 +208,42 @@ repos:
     # if you enable pure-bot for a whole organization to be used by new repos
     # by default
     disabled: true
+    board:
+      zenhub_token: "<TOKEN>"
+      github_repo: "<REPO>"
+      columns:
+        - name: "Inbox"
+          id: "<ID>"
+          events:
+            - "issues_demilestoned"
+            - "issues_opened"
+        - name: "Backlog"
+          id: "<ID>"
+          events:
+            - "issues_reopened"
+            - "issues_milestoned"
+        - name: "Review"
+          id: "<ID>"
+          events:
+            - "pull_request_opened"
+            - "pull_request_reopened"
+        - name: "Done"
+          id: "<ID>"
+          postMergePipeline: true
 ```
 
 As explained above, certain features are switched on only if the corresponding configuration is given.
+
+### Board Config (Zenhub)
+
+The board subsections in the config file define how issues will be moved on a zenhub board.
+Each named column, backed by a [Zenhub column ID](https://github.com/ZenHubIO/API), is mapped to github events.
+When this event are triggered, the bot will move the issues to the respective column on the Zenhub Board.
+
+#### The `postMergePipeline` flag
+
+This flag indicates the column where issues, closed by a PR, will be moved.
+If missing no post processing will happen.
 
 ## Testing
 
