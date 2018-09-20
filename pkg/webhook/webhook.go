@@ -114,12 +114,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-
-			/*s := fmt.Sprintf("%s", pl)
-			fmt.Println("--")
-			fmt.Println(s)
-			fmt.Println("--")
-			*/
+			
 			payload = pl
 		}
 

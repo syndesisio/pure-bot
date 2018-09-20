@@ -86,7 +86,7 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 
 		if issue_scheduled {
 			delete(postProcessing, number)
-			go postProcess(event, gh, config, *doneColumn, logger)
+			go postProcess(event, gh, config, logger)
 			return nil
 		}
 	} else if "issues_reopened" == eventKey && event.GetIssue().GetLocked() {
@@ -143,7 +143,7 @@ func changeProgressLabel(gh *github.Client, repo *github.Repository, issue githu
 		issue.GetNumber(), labels)
 }
 
-func postProcess(event *github.IssuesEvent, gh *github.Client, config config.RepoConfig, col column, logger *zap.Logger) {
+func postProcess(event *github.IssuesEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) {
 
 	number := strconv.Itoa(*event.Issue.Number)
 
