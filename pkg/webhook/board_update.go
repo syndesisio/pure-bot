@@ -36,7 +36,7 @@ var doneColumn = &column{}
 
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
-	if "<repo>" == config.Board.GithubRepo { 
+	if "<repo>" == config.Board.GithubRepo {
 		logger.Warn("Repo not configured, ignore event")
 		return nil
 	}
