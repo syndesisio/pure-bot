@@ -114,7 +114,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			
+
 			payload = pl
 		}
 
