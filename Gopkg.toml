@@ -65,13 +65,16 @@
 # source = "https://github.com/myfork/package.git"
 
 
-
 [[constraint]]
   branch = "master"
+  name= "github.com/davecgh/go-spew"
+	
+[[constraint]]
+  version = "v0.0.3"
   name = "github.com/spf13/cobra"
 
 [[constraint]]
-  branch = "master"
+  version = "v1.2.0"
   name = "github.com/spf13/viper"
 
 [[constraint]]
@@ -83,7 +86,7 @@
   version = "1.4.1"
 
 [[constraint]]
-  revision = "8ea2e2657df890db8fb434a9274799d641bd698c"
+  version = "v18.1.0"
   name = "github.com/google/go-github"
 
 [[constraint]]

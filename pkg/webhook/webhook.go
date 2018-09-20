@@ -28,6 +28,7 @@ import (
 	"github.com/syndesisio/pure-bot/pkg/github/apps"
 	"go.uber.org/zap"
 	"reflect"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 type GitHubAppsClientFunc func(installationID int) (*github.Client, error)
@@ -85,7 +86,7 @@ func createClient(appCfg config.GitHubAppConfig, event interface{}) (*github.Cli
 	}
 	installation := val.FieldByName("Installation").Interface().(*github.Installation)
 	if installation == nil {
-		return nil, errors.Errorf("no installation in event %v found, so no GitHub client could be created", event)
+		return nil, errors.Errorf("no installation in event found, so no GitHub client could be created")
 	}
 	client, err := newGitHubClient(appCfg.AppID, appCfg.PrivateKeyFile, *installation.ID)
 	if err != nil {
@@ -113,6 +114,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+
 			payload = pl
 		}
 
@@ -124,7 +126,13 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 			return
 		}
 
-		repo := extractRepository(event)
+		repo, err := extractRepository(event)
+		if err != nil {
+			logger.Error("Invalid payload", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		repoConfig := extractRepoConfigWithDefaults(repo, config)
 		if repo != nil {
 			logger.Debug("Processing event ", zap.String("messageType", messageType), zap.String("repo", *repo.Name))
@@ -144,7 +152,7 @@ func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.
 		// ========================================================================
 		// Call all handlers
 		for _, wh := range handlerMap[messageType] {
-			logger.Info("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
+			logger.Debug("call handler", zap.String("type", messageType), zap.String("handler", reflect.TypeOf(wh).String()))
 			err = multierr.Combine(err, wh.HandleEvent(event, client, *repoConfig, logger))
 		}
 
@@ -177,10 +185,14 @@ func extractRepoConfigWithDefaults(repo *github.Repository, fullConfig config.Co
 	return ret
 }
 
-func extractRepository(event interface{}) *github.Repository {
+func extractRepository(event interface{}) (*github.Repository, error) {
+
+	//spew.Dump(event)
+
 	val := reflect.Indirect(reflect.ValueOf(event))
 	if _, found := val.Type().FieldByName("Repo"); !found {
-		return nil
+		return nil, fmt.Errorf("repository not found")
 	}
-	return val.FieldByName("Repo").Interface().(*github.Repository)
+
+	return val.FieldByName("Repo").Interface().(*github.Repository), nil
 }

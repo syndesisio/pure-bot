@@ -50,7 +50,7 @@ func (h *dismissReview) HandleEvent(eventObject interface{}, gh *github.Client, 
 
 	var multiErr error
 	for _, review := range reviews {
-		_, _, err = gh.PullRequests.DismissReview(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), event.PullRequest.GetID(), review.GetID(), &github.PullRequestReviewDismissalRequest{
+		_, _, err = gh.PullRequests.DismissReview(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), int(event.PullRequest.GetID()), review.GetID(), &github.PullRequestReviewDismissalRequest{
 			Message: &dismissMessage,
 		})
 		multiErr = multierr.Combine(multiErr, err)

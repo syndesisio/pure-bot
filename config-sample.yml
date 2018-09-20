@@ -20,29 +20,28 @@ repos:
       approved: "status/approved"
       newIssues:
       - "notif/triage"
-  pure-bot-sandbox:
+pure-bot-sandbox:
     disabled: true
     board:
-      zenhub_token: "<zenhub token>"
-      github_repo: "<github repository id>"
-     columns:
-            - name: "backlog"
-              id: "5b33b25ab0388a502999f52b"
-              events:
-                - "issues_unassigned"
-                - "issues_opened"
-                - "issues_reopened"
-            - name: "progress"
-              id: "5b33b25ab0388a502999f52c"
-              events:
-                - "issues_assigned"
-                - "pull_request_closed"
-            - name: "review"
-              id: "5b33b25ab0388a502999f52d"
-              events:
-                - "pull_request_opened"
-                - "pull_request_reopened"
-            - name: "closed"
-              id: "5b33b25ab0388a502999f52e"
-              events:
-                - "issues_closed"
+      zenhub_token: "<TOKEN>"
+      github_repo: "<REPO>"
+      columns:
+        - name: "Inbox"
+          id: "<ID>"
+          events:
+            - "issues_demilestoned"
+            - "issues_opened"
+        - name: "Backlog"
+          id: "<ID>"
+          events:
+            - "issues_reopened"
+            - "issues_milestoned"
+        - name: "Review"
+          id: "<ID>"
+          events:
+            - "pull_request_opened"
+            - "pull_request_reopened"
+        - name: "Done"
+          id: "<ID>"
+          postMergePipeline: true
+

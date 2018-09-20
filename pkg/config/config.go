@@ -79,7 +79,8 @@ type Board struct {
 }
 
 type Column struct {
-	Name   string   `mapstructure:"name"`
-	Id     string   `mapstructure:"id"`
-	Events []string `mapstructure:"events"`
+	Name              string   `mapstructure:"name"`
+	Id                string   `mapstructure:"id"`
+	Events            []string `mapstructure:"events"`
+	PostMergePipeline bool     `mapstructure:"postMergePipeline"`
 }
