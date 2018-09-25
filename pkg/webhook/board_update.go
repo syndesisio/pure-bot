@@ -79,37 +79,51 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 	var messageType = "issues"
 
 	number := strconv.Itoa(*event.Issue.Number)
-	logger.Debug("Handling issuesEvent for issue " + number)
-	logger.Debug("Issue Action: " + *event.Action)
-
 	eventKey := messageType + "_" + *event.Action
+
+	logger.Info("<< Event " + eventKey + " on issue " + number + " >>")
 
 	// post processing (from previous event cycle)
 	// takes precedence, the event will no be processed further
 	if "issues_closed" == eventKey {
-		_, issue_scheduled := postProcessing[number]
 
-		if issue_scheduled {
-			delete(postProcessing, number)
+		if _, ok := postProcessing[number]; ok {
+			logger.Debug("Post process issue: " + number)
+			//delete(postProcessing, number)
 			go postProcess(event, gh, config, logger)
 			return nil
+		} else {
+			clearProgressLabel(*event.GetIssue(), gh, event.Repo)
 		}
+
 	} else if "issues_reopened" == eventKey && event.GetIssue().GetLocked() {
 		// move
 		err := moveIssueOnBoard(config, number, *doneColumn, logger)
 
-		// update progress/* label
-		changeProgressLabel(gh, event.Repo, *event.Issue, doneColumn.name)
-
 		if err != nil {
 			logger.Error("Post processing failed: Cannot move issue")
+		} else {
+
+			if _, ok := postProcessing[number]; ok {
+				logger.Debug("Clear post processing for issue: " + number)
+				delete(postProcessing, number)
+			}
+
+			// update progress/* label
+			changeProgressLabel(gh, event.Repo, *event.Issue, doneColumn.name)
+
+			response, err := gh.Issues.Unlock(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number)
+
+			if err != nil {
+				logger.Warn("Error unlocking issue: " + response.Status)
+			}
+
 		}
 	}
 
 	// cleanup post processing markers, but skip actions
-	if event.GetIssue().GetLocked() {
-		gh.Issues.Unlock(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number)
-		logger.Debug("Unlock and ignore event for: " + number)
+	if event.GetIssue().GetLocked() == true {
+		logger.Debug("Ignore event for locked issue: " + number)
 		return nil
 	}
 
@@ -120,7 +134,6 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 
 		if nil == err {
 			// update progress/* label
-
 			changeProgressLabel(gh, event.Repo, *event.Issue, col.name)
 		}
 
@@ -134,8 +147,15 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 
 func changeProgressLabel(gh *github.Client, repo *github.Repository, issue github.Issue, newLabel string) {
 
+	clearProgressLabel(issue, gh, repo)
+
 	labels := []string{"progress/" + newLabel}
 
+	gh.Issues.AddLabelsToIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
+		issue.GetNumber(), labels)
+}
+
+func clearProgressLabel(issue github.Issue, gh *github.Client, repo *github.Repository) {
 	for _, label := range issue.Labels {
 		if strings.HasPrefix(*label.Name, "progress/") {
 			gh.Issues.RemoveLabelForIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
@@ -143,16 +163,13 @@ func changeProgressLabel(gh *github.Client, repo *github.Repository, issue githu
 
 		}
 	}
-
-	gh.Issues.AddLabelsToIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
-		issue.GetNumber(), labels)
 }
 
 func postProcess(event *github.IssuesEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) {
 
 	number := strconv.Itoa(*event.Issue.Number)
 
-	logger.Debug("Handle grace time ... ")
+	logger.Debug("Enter grace time before prost processing ... ")
 	time.Sleep(10 * time.Second)
 
 	_, e := gh.Issues.Lock(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), *event.Issue.Number, &github.LockIssueOptions{LockReason: "resolved"})
@@ -166,15 +183,16 @@ func postProcess(event *github.IssuesEvent, gh *github.Client, config config.Rep
 	if err != nil {
 		logger.Error("Post processing failed ")
 	}
+
 }
 
 func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
 	var messageType = "pull_request"
+	eventKey := messageType + "_" + *event.Action
 
 	prNumber := strconv.Itoa(*event.PullRequest.Number)
-	logger.Info("Handling pullReqestEvent for PR " + prNumber)
-	logger.Info("PR Action: " + *event.Action)
+	logger.Info("<< Event " + eventKey + " on PR " + prNumber + " >>")
 
 	commits, _, err := gh.PullRequests.ListCommits(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(),
 		*event.PullRequest.Number, nil)
@@ -184,68 +202,76 @@ func (h *boardUpdate) handlePullRequestEvent(event *github.PullRequestEvent, gh 
 		return nil
 	}
 
+	issues := []string{}
+
+	// find issues in commit messages
 	for _, commit := range commits {
-
 		message := *commit.Commit.Message
-		logger.Debug("Processing commit message: " + message)
-
-		// get issue id from commit message
-
 		match := regex.Match([]byte(message))
-		logger.Debug("regex matches: " + strconv.FormatBool(match))
+		logger.Debug("keyword in commit message? " + strconv.FormatBool(match))
+		extractIssueNumbers(&issues, message)
+	}
 
-		issues := extractIssueNumbers(message)
+	// find issues in PR message
+	if len(issues) == 0 {
+		prMessage := event.GetPullRequest().GetBody()
+		match2 := regex.Match([]byte(prMessage))
+		logger.Debug("keyword in PR message? " + strconv.FormatBool(match2))
+		extractIssueNumbers(&issues, prMessage)
+	}
 
-		for _, issue := range issues {
-			eventKey := messageType + "_" + *event.Action
+	logger.Debug("number issues references found: " + strconv.Itoa(len(issues)))
 
-			// schedule post processing if needed
-			// closed & merged = comitted
-			if "pull_request_closed" == eventKey &&
-				event.GetPullRequest().GetMerged() &&
-				doneColumn.isPostMergePipeline {
+	// process issues
+	for _, number := range issues {
 
-				// schedule completion with next event
-				logger.Debug("Schedule post processing for #" + issue)
-				postProcessing[issue] = *doneColumn
-				continue
+		if _, ok := postProcessing[number]; ok {
+			logger.Debug("Issue scheduled for post processing, ignore event for issue: " + number)
+			continue
+		}
+
+		// schedule post processing if needed
+		if "pull_request_opened" == eventKey &&
+			doneColumn.isPostMergePipeline {
+
+			// schedule completion with next event
+			logger.Debug("Schedule post processing for issue: " + number)
+			postProcessing[number] = *doneColumn
+			continue
+		}
+
+		// regular PR processing
+		col, ok := stateMapping[eventKey]
+		if ok {
+			err := moveIssueOnBoard(config, number, col, logger)
+
+			i, _ := strconv.Atoi(number)
+			item, _, _ := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), i)
+
+			if nil == err {
+				changeProgressLabel(gh, event.Repo, *item, col.name)
 			}
-
-			// regular PR processing
-			col, ok := stateMapping[eventKey]
-			if ok {
-				err := moveIssueOnBoard(config, issue, col, logger)
-
-				i, _ := strconv.Atoi(issue)
-				item, _, _ := gh.Issues.Get(context.Background(), event.Repo.Owner.GetLogin(), event.Repo.GetName(), i)
-
-				if nil == err {
-					changeProgressLabel(gh, event.Repo, *item, col.name)
-				}
-				return err
-			} else {
-				logger.Debug("Ignore ummapped PR event: " + eventKey)
-			}
+			return err
+		} else {
+			logger.Debug("Ignore unmapped PR event: " + eventKey)
 		}
 	}
 
 	return nil
 }
 
-func extractIssueNumbers(commitMessage string) []string {
+func extractIssueNumbers(issues *[]string, commitMessage string) {
 	groupNames := regex.SubexpNames()
-	issues := []string{}
+
 	for _, match := range regex.FindAllStringSubmatch(commitMessage, -1) {
 		for groupIdx, _ := range match {
 			name := groupNames[groupIdx]
 
 			if name == "issue" {
-				issues = append(issues, match[1])
+				*issues = append(*issues, match[1])
 			}
 		}
 	}
-
-	return issues
 }
 
 func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger *zap.Logger) error {
