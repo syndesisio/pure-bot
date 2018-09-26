@@ -8,19 +8,22 @@ import (
 func TestIssueRegex(t *testing.T) {
 
 	// key words
+	issues := []string{}
 
-	issues := extractIssueNumbers("Fixes #19, Fixed #19, Fixing #19")
+	extractIssueNumbers(&issues, "Fixes #19, Fixed #19, Fixing #19")
 	if len(issues) != 3 {
 		t.Error("Invalid number of matches")
 	}
 
-	issues = extractIssueNumbers("Closed #19, Closed #19, Closing #19")
+	issues = issues[:0]
+	extractIssueNumbers(&issues, "Closed #19, Closed #19, Closing #19")
 	if len(issues) != 3 {
 		t.Error("Invalid number of matches")
 	}
 
 	// single matches
-	issues = extractIssueNumbers("Fixes #19")
+	issues = issues[:0]
+	extractIssueNumbers(&issues, "Fixes #19")
 	if len(issues) != 1 {
 		t.Error("Invalid number of matches")
 	}
@@ -30,7 +33,8 @@ func TestIssueRegex(t *testing.T) {
 	}
 
 	// multiple matches
-	issues = extractIssueNumbers("Fixes #19, Closes #20")
+	issues = issues[:0]
+	extractIssueNumbers(&issues, "Fixes #19, Closes #20")
 
 	if len(issues) != 2 {
 		t.Error("Invalid number of matches")
