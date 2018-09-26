@@ -16,14 +16,14 @@ func TestIssueRegex(t *testing.T) {
 	}
 
 	issues = issues[:0]
-	extractIssueNumbers(&issues,"Closed #19, Closed #19, Closing #19")
+	extractIssueNumbers(&issues, "Closed #19, Closed #19, Closing #19")
 	if len(issues) != 3 {
 		t.Error("Invalid number of matches")
 	}
 
 	// single matches
 	issues = issues[:0]
-	extractIssueNumbers(&issues,"Fixes #19")
+	extractIssueNumbers(&issues, "Fixes #19")
 	if len(issues) != 1 {
 		t.Error("Invalid number of matches")
 	}
@@ -34,7 +34,7 @@ func TestIssueRegex(t *testing.T) {
 
 	// multiple matches
 	issues = issues[:0]
-	extractIssueNumbers(&issues,"Fixes #19, Closes #20")
+	extractIssueNumbers(&issues, "Fixes #19, Closes #20")
 
 	if len(issues) != 2 {
 		t.Error("Invalid number of matches")
