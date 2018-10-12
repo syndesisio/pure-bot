@@ -147,12 +147,13 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 
 func changeProgressLabel(gh *github.Client, repo *github.Repository, issue github.Issue, newLabel string) {
 
-	clearProgressLabel(issue, gh, repo)
+	/*clearProgressLabel(issue, gh, repo)
 
 	labels := []string{"progress/" + newLabel}
 
 	gh.Issues.AddLabelsToIssue(context.Background(), repo.Owner.GetLogin(), repo.GetName(),
-		issue.GetNumber(), labels)
+		issue.GetNumber(), labels)*/
+
 }
 
 func clearProgressLabel(issue github.Issue, gh *github.Client, repo *github.Repository) {
