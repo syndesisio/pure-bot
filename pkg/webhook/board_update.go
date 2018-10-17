@@ -30,7 +30,7 @@ var postProcessing = make(map[string]column)
 
 var zenHubApi = "https://api.zenhub.io"
 
-var regex = regexp.MustCompile("(?mi)(?:clos(?:e[sd]?|ing)|fix(?:e[sd]|ing))[^\\s]*\\s+#(?P<issue>[0-9]+)")
+var regex = regexp.MustCompile("(?mi)(?:clos(?:e[sd]?|ing)|fix(?:e[sd]|ing))[^\\s]*\\s+(?:#|https://github.com/.+/issues/)(?P<issue>[0-9]+)")
 
 var doneColumn = &column{}
 
