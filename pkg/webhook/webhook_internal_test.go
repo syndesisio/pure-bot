@@ -1,9 +1,9 @@
 package webhook
 
 import (
+	"strconv"
 	"strings"
 	"testing"
-	"strconv"
 )
 
 func TestIssueRegex(t *testing.T) {
