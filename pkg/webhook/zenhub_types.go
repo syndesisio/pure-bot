@@ -13,7 +13,7 @@ type Zenhub interface {
 }
 
 type ZenhubAction struct {
-	Type string
+	Type        string
 	IssueNumber string
 }
 
@@ -28,31 +28,29 @@ func (z ZenhubAction) GetIssue() string {
 type IssueTransfer struct {
 	ZenhubAction
 	From string
-	To string
+	To   string
 }
 
 // {"plus_ones":[],"pipeline":{"name":"New Issues"},"is_epic":false}
 type ZenhubIssue struct {
 	Pipeline ZenhubPipeline `json:"pipeline"`
-	IsEpic bool   `json:"is_epic"`
+	IsEpic   bool           `json:"is_epic"`
 }
-
 
 type ZenhubPipeline struct {
 	Name string `json:"name"`
 }
 
-
 func (i *IssueTransfer) FieldMap(req *http.Request) binding.FieldMap {
 	return binding.FieldMap{
-		&i.Type: 			"type",
-		&i.IssueNumber: 	"issue_number",
-		&i.From:        	"from_pipeline_name",
-		&i.To:          	"to_pipeline_name",
+		&i.Type:        "type",
+		&i.IssueNumber: "issue_number",
+		&i.From:        "from_pipeline_name",
+		&i.To:          "to_pipeline_name",
 	}
 }
 
-func ParseZenhub(r *http.Request, logger *zap.Logger) (Zenhub , error) {
+func ParseZenhub(r *http.Request, logger *zap.Logger) (Zenhub, error) {
 
 	r.ParseForm()
 

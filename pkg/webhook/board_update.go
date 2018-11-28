@@ -23,7 +23,7 @@ type column struct {
 	name                string
 	id                  string
 	isPostMergePipeline bool
-	isInbox 			bool
+	isInbox             bool
 }
 
 var stateMapping = map[string]column{}
@@ -131,7 +131,7 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 			}
 
 		}
-	} else if "issues_opened" == eventKey && event.GetIssue().GetMilestone() !=nil {
+	} else if "issues_opened" == eventKey && event.GetIssue().GetMilestone() != nil {
 
 		// check if milestoned event is configured
 		_, ok := stateMapping["issues_milestoned"]
@@ -151,7 +151,7 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 			return nil
 		}
 
-	 } else if "issues_demilestoned" == eventKey {
+	} else if "issues_demilestoned" == eventKey {
 		logger.Info("Ignore  issues_demilestoned event.")
 		return nil
 	}
