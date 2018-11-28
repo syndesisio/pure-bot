@@ -95,7 +95,7 @@ func createClient(appCfg config.GitHubAppConfig, event interface{}) (*github.Cli
 	return client, nil
 }
 
-func NewHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.Logger) (http.HandlerFunc, error) {
+func NewGithubHTTPHandler(cfg config.WebhookConfig, config config.Config, logger *zap.Logger) (http.HandlerFunc, error) {
 	webhookSecret := ([]byte)(cfg.Secret)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload []byte
