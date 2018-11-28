@@ -108,6 +108,14 @@
   version = "v1.8.0"
 
 [[projects]]
+  digest = "1:923350d2ac196d04b7e5d5e19378cfc66af3c1e5421134123833b07be98d9e85"
+  name = "github.com/mholt/binding"
+  packages = ["."]
+  pruneopts = ""
+  revision = "f53601f1387c422be7317a2b01d96b2455d2d2d6"
+  version = "v0.3.0"
+
+[[projects]]
   digest = "1:5219b4506253ccc598f9340677162a42d6a78f340a4cc6df2d62db4d0593c4e9"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
@@ -272,6 +280,7 @@
     "github.com/go-resty/resty",
     "github.com/google/go-github/github",
     "github.com/imdario/mergo",
+    "github.com/mholt/binding",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",

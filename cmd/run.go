@@ -25,8 +25,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/syndesisio/pure-bot/pkg/http"
 	"github.com/syndesisio/pure-bot/pkg/webhook"
+	"github.com/syndesisio/pure-bot/pkg/http"
 )
 
 // runCmd represents the run command
@@ -35,12 +35,24 @@ var runCmd = &cobra.Command{
 	Short: "Runs pure-bot",
 	Long:  `Runs pure-bot.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		webhookHandler, err := webhook.NewHTTPHandler(botConfig.Webhook, botConfig, logger.Named("webhook"))
+		githubHandler, err := webhook.NewGithubHTTPHandler(botConfig.Webhook, botConfig, logger.Named("github"))
 		if err != nil {
 			logger.Fatal("failed to create webhook handler", zap.Error(err))
 		}
 
-		srv := http.New(botConfig.HTTP, webhookHandler)
+		zenhubHandler, err := webhook.NewZenhubHTTPHandler(botConfig.Webhook, botConfig, logger.Named("zenhub"))
+		if err != nil {
+			logger.Fatal("failed to create webhook handler", zap.Error(err))
+		}
+
+		// request dispatching
+		mux := gohttp.NewServeMux()
+		mux.HandleFunc("/", githubHandler)
+		mux.HandleFunc("/zenhub", zenhubHandler)
+
+		// server
+		srv := http.New(botConfig.HTTP, mux)
+
 		c := make(chan os.Signal, 2)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		var wg sync.WaitGroup

@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
 	"github.com/syndesisio/pure-bot/pkg/config"
@@ -22,6 +23,7 @@ type column struct {
 	name                string
 	id                  string
 	isPostMergePipeline bool
+	isInbox 			bool
 }
 
 var stateMapping = map[string]column{}
@@ -33,6 +35,8 @@ var zenHubApi = "https://api.zenhub.io"
 var regex = regexp.MustCompile("(?mi)(?:clos(?:e[sd]?|ing)|fix(?:e[sd]|ing))[^\\s]*\\s+(?:#|https://github.com/.+/issues/)(?P<issue>[0-9]+)")
 
 var doneColumn = &column{}
+
+var inboxColumn = &column{}
 
 func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, config config.RepoConfig, logger *zap.Logger) error {
 
@@ -47,10 +51,14 @@ func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, co
 		logger.Info("Initialising state mappings ...")
 
 		for _, col := range config.Board.Columns {
-			c := column{col.Name, col.Id, col.PostMergePipeline}
+			c := column{col.Name, col.Id, col.PostMergePipeline, col.IsInbox}
 
 			if c.isPostMergePipeline { // the last one flagged as post process will act as doneColumn
 				doneColumn = &c
+			}
+
+			if c.isInbox { // the last one flagged as post process will act as inbox
+				inboxColumn = &c
 			}
 
 			for _, event := range col.Events {
@@ -61,6 +69,10 @@ func (h *boardUpdate) HandleEvent(eventObject interface{}, gh *github.Client, co
 
 		if doneColumn == nil || doneColumn.id == "" {
 			logger.Warn("Missing column definition for `Done`")
+		}
+
+		if inboxColumn == nil || inboxColumn.id == "" {
+			logger.Warn("Missing column definition for `Inbox`")
 		}
 	}
 
@@ -119,6 +131,29 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 			}
 
 		}
+	} else if "issues_opened" == eventKey && event.GetIssue().GetMilestone() !=nil {
+
+		// check if milestoned event is configured
+		_, ok := stateMapping["issues_milestoned"]
+		if ok {
+			logger.Debug("Issue carries milestone, ignore event")
+			return nil
+		}
+	} else if "issues_milestoned" == eventKey {
+		// only move from inbox forward
+		err, col := getIssueColumn(config, number, logger)
+		if err != nil {
+			logger.Error("Error retrieving issue column", zap.Error(err))
+		}
+
+		if col != inboxColumn.name {
+			logger.Debug("Milestone event for issue outside the Inbox, not moving  #" + number)
+			return nil
+		}
+
+	 } else if "issues_demilestoned" == eventKey {
+		logger.Info("Ignore  issues_demilestoned event.")
+		return nil
 	}
 
 	// cleanup post processing markers, but skip actions
@@ -297,4 +332,32 @@ func moveIssueOnBoard(config config.RepoConfig, issue string, col column, logger
 	}
 
 	return nil
+}
+
+func getIssueColumn(config config.RepoConfig, issue string, logger *zap.Logger) (error, string) {
+
+	url := zenHubApi + "/p1/repositories/" + config.Board.GithubRepo + "/issues/" + issue
+	response, err := resty.R().
+		SetHeader("X-Authentication-Token", config.Board.ZenhubToken).
+		SetHeader("Content-Type", "application/json").
+		Get(url)
+
+	if err != nil {
+		return err, ""
+	}
+
+	if response.StatusCode() > 400 {
+		logger.Warn("Zenhub call unsuccessful: HTTP " + strconv.Itoa(response.StatusCode()) + " from " + url)
+	}
+
+	bytes := response.Body()[:]
+
+	var zenhubIssue ZenhubIssue
+	err = json.Unmarshal(bytes, &zenhubIssue)
+
+	if err != nil {
+		return err, ""
+	}
+
+	return nil, zenhubIssue.Pipeline.Name
 }

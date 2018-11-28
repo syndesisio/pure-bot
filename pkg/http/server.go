@@ -26,7 +26,8 @@ import (
 	"github.com/syndesisio/pure-bot/pkg/config"
 )
 
-func New(cfg config.HTTPConfig, h http.HandlerFunc) *Server {
+func New(cfg config.HTTPConfig, h http.Handler) *Server {
+
 	srv := &Server{
 		cfg: cfg,
 		http: &http.Server{

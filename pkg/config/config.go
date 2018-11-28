@@ -83,4 +83,5 @@ type Column struct {
 	Id                string   `mapstructure:"id"`
 	Events            []string `mapstructure:"events"`
 	PostMergePipeline bool     `mapstructure:"postMergePipeline"`
+	IsInbox 		  bool     `mapstructure:"isInbox"`
 }
