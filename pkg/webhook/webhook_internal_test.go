@@ -35,7 +35,7 @@ func TestIssueRegex(t *testing.T) {
 
 	// multiple matches
 	issues = issues[:0]
-	extractIssueNumbers(&issues, "Fixes #19, Closes #20")
+	extractIssueNumbers(&issues, "fixes #19, closes #20")
 
 	if len(issues) != 2 {
 		t.Error("Invalid number of matches")
@@ -80,4 +80,33 @@ func TestIssueRegex(t *testing.T) {
 		t.Error("Invalid value " + issues[0])
 	}
 
+	s = "…s date parsing issue\r\n\r\nFixes #3863"
+
+	issues = issues[:0]
+	extractIssueNumbers(&issues, s)
+
+	if len(issues) != 1 {
+		t.Error("Invalid number of matches: " + strconv.Itoa(len(issues)))
+	}
+
+	if strings.Compare("3863", issues[0]) != 0 {
+		t.Error("Invalid value " + issues[0])
+	}
+
+
+	s = "Closes #3774 \r\nCloses #3578"
+	issues = issues[:0]
+	extractIssueNumbers(&issues, s)
+
+	if len(issues) != 2 {
+		t.Error("Invalid number of matches: " + strconv.Itoa(len(issues)))
+	}
+
+	if strings.Compare("3774", issues[0]) != 0 {
+		t.Error("Invalid value " + issues[0])
+	}
+
+	if strings.Compare("3578", issues[1]) != 0 {
+		t.Error("Invalid value " + issues[1])
+	}
 }
