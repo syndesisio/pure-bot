@@ -28,6 +28,7 @@ pure-bot-sandbox:
       columns:
         - name: "Inbox"
           id: "<ID>"
+          isInbox: true
           events:
             - "issues_demilestoned"
             - "issues_opened"
@@ -44,4 +45,3 @@ pure-bot-sandbox:
         - name: "Done"
           id: "<ID>"
           postMergePipeline: true
-

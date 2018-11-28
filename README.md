@@ -214,6 +214,7 @@ repos:
       columns:
         - name: "Inbox"
           id: "<ID>"
+          isInbox: true
           events:
             - "issues_demilestoned"
             - "issues_opened"
