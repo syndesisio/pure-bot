@@ -66,10 +66,6 @@
 
 
 [[constraint]]
-  branch = "master"
-  name= "github.com/davecgh/go-spew"
-	
-[[constraint]]
   version = "v0.0.3"
   name = "github.com/spf13/cobra"
 
@@ -86,7 +82,7 @@
   version = "1.4.1"
 
 [[constraint]]
-  version = "v18.1.0"
+  version = "v21.0.0"
   name = "github.com/google/go-github"
 
 [[constraint]]
