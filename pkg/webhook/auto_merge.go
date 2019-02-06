@@ -150,7 +150,8 @@ func mergePR(issue *github.Issue, pr *github.PullRequest, owner, repository stri
 	}
 
 	for _, check := range prChecks.CheckRuns {
-		logger.Debug("found PR check", zap.String("name", *check.Name), zap.String("conclusion", *check.Conclusion), zap.String("ref", commitSHA))
+
+		logger.Debug("found PR check", zap.String("name", *check.Name), zap.Any("conclusion", check.Conclusion), zap.String("ref", commitSHA))
 		prStatusMap[*check.Name] = check.Conclusion != nil && *check.Conclusion == checkEventSuccessConclusion
 
 	}
