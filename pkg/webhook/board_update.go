@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/go-resty/resty"
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 	"github.com/syndesisio/pure-bot/pkg/config"
 	"go.uber.org/zap"
 	"regexp"
@@ -98,6 +99,23 @@ func (h *boardUpdate) handleIssuesEvent(event *github.IssuesEvent, gh *github.Cl
 	// post processing (from previous event cycle)
 	// takes precedence, the event will no be processed further
 	if "issues_closed" == eventKey {
+
+		// ignore labels present?
+		labels, _, err := gh.Issues.ListLabelsByIssue(
+			context.Background(),
+			event.Repo.Owner.GetLogin(),
+			event.Repo.GetName(),
+			*event.Issue.Number,
+			nil,
+		)
+		if err != nil {
+			return errors.Wrapf(err, "failed to list labels for Issue %s", event.Issue.GetHTMLURL())
+		}
+
+		if labelsContainsLabel(labels, "ignore/qe") {
+			logger.Debug("'ignore/qe' label present, ignoring event on " + number)
+			return nil
+		}
 
 		if _, ok := postProcessing[number]; ok {
 			logger.Debug("Post process issue: " + number)
