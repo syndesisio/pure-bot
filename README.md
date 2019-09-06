@@ -69,7 +69,7 @@ Successfully built 9090fd17e37e
 image: syndesis/pure-bot:3109e57-dirty
 
 # Build and push a syndesis/pure-bot:testing which can be referenced in a dedicated test environment
-$ make test-image
+$ make image-test
 ```
 
 

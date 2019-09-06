@@ -86,5 +86,5 @@
   name = "github.com/google/go-github"
 
 [[constraint]]
-  revision = "master"
+  revision = "v1.12.0"
   name = "github.com/go-resty/resty"
