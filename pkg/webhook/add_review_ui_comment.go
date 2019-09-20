@@ -78,4 +78,6 @@ func (h *addReviewUiComment) HandleEvent(eventObject interface{}, gh *github.Cli
 	if err != nil {
 		return errors.Wrapf(err, "Failed to create comment '%s' on PR %s", message, event.CheckRun.PullRequests[0].GetURL())
 	}
+
+	return nil
 }
