@@ -248,11 +248,16 @@ If missing no post processing will happen.
 
 ## Testing
 
-For testing this bot for the Syndesis setup, just use `make image-test`, which does:
+It's handy to use https://smee.io/ as a GitHub webhook for testing locally. Simply add the webhook on GitHub and
+run the smee client locally. You can then point pure-bot to the smee client by running:
+`pure-bot --bind-address 127.0.0.1 --bind-port 3000`, where 127.0.0.1:3000 is a forwarding address provided by the smee client.
+The smee client allows you to peek at events and even redeliver them.
+
+**(not available now:)** For testing this bot for the Syndesis setup, just use `make image-test`, which does:
 
 * Compiles `pure-bot`
 * Creates Docker image `syndesis/pure-bot:testing`
-* Pushs this image to Docker Hub (you need to be logged with an account which has permissions for the `syndesis` account)
+* Pushes this image to Docker Hub (you need to be logged with an account which has permissions for the `syndesis` account)
 
 Then, we have a GitHub App named `PuRe Bot Test` installed which is configured for the repo [https://github.com/syndesisio/pure-bot-sandbox](https://github.com/syndesisio/pure-bot-sandbox).
 This repo's only purpose is to allow testing of pure bot, you can do any nonsense you like within this repo.

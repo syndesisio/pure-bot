@@ -48,6 +48,7 @@ var (
 		&wip{},
 		&newIssueLabel{},
 		&boardUpdate{},
+		&addReviewUiComment{},
 		//		&dismissReview{},
 		//		&failedStatusCheckAddComment{},
 	}
